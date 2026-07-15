@@ -26,11 +26,11 @@
 - 별도 레포 **newbeez-back** (Spring Boot, `localhost:8080`). 데이터(팀·문항)는 백엔드가 소유 → 프론트는 **API로 fetch**. (백엔드 완성 전엔 임시 정적 데이터 허용)
 - **제품 설계(15팀 좌표·10문항·추천 알고리즘)는 `newbeez-back/docs/` 참고.**
 
-## Git 워크플로우
-- **브랜치 = GitHub Flow**: 항상 동작하는 `main`에서 기능 브랜치(`feat/…`·`fix/…`·`chore/…`, 소문자-하이픈)를 따서 작업 → 병합. 초기 세팅·스캐폴딩은 `main`에 직접. 새 작업 전엔 깨끗한 트리(커밋 or `git stash`).
-- **커밋 메시지 = gitmoji + Conventional Commits** 결합: `:이모지: type(scope): 요약` (요약 50자 이내·간결하게, scope 선택). 예) `:sparkles: feat(quiz): 세로 4점척도 질문 화면`
-  - 자주 씀: `:sparkles: feat`(기능) · `:bug: fix`(버그) · `:memo: docs`(문서) · `:lipstick: style`(UI/디자인) · `:recycle: refactor`(정리) · `:wrench: chore`(설정·잡일) · `:heavy_plus_sign: chore`(의존성 추가) · `:arrow_up: chore`(의존성 업글) · `:white_check_mark: test`(테스트) · `:tada:`(초기화)
-- 커밋 메시지에 **Claude 공동저자(`Co-Authored-By`) 트레일러는 넣지 않음.**
+## Git & 작업 방식
+- **브랜치** GitHub Flow: `main`은 항상 동작. 기능은 `feat/…` 브랜치→병합, 세팅·잡일은 `main` 직접.
+- **커밋** gitmoji + Conventional: `:이모지: type: 요약` (예 `:sparkles: feat:` · `:bug: fix:` · `:wrench: chore:`). `Co-Authored-By` 안 씀.
+- **작업 루프** `/work [설명]`: 계획(explain-first·승인 대기)→브랜치·빌드→검증→커밋→`main` 병합→`/handoff`. (상세는 `.claude/commands/work.md`)
+- **역할** git(커밋·푸시·브랜치)은 **Claude가** 실행, `pnpm` 등 학습 명령은 **사용자가 직접**.
 
 ## 규칙
 - 사용자는 **프론트 입문자** — 개념부터 설명(explain-first), 명령은 사용자가 직접 실행.

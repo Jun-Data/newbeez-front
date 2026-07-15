@@ -40,5 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Claude Code
-.claude/
+# Claude Code — 로컬 설정은 무시, 프로젝트 커스텀 명령(.claude/commands)은 커밋
+.claude/*
+!.claude/commands/

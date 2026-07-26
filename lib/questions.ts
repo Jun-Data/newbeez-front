@@ -24,9 +24,9 @@ export type Question =
   | {
       readonly kind: "scale";
       readonly id: string;
+      readonly prompt: string;
       readonly axis: Axis;
       readonly slot: ItemSlot;
-      readonly prompt: string;
       readonly negative: Pole;
       readonly positive: Pole;
     }

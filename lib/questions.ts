@@ -1,4 +1,4 @@
-import type { Axis, Color, ItemSlot, LeagueFilter } from "./types";
+import type { Axis, ItemSlot, LeagueFilter } from "./types";
 
 // 성향 문항의 한쪽 극
 export interface Pole {
@@ -29,12 +29,6 @@ export type Question =
       readonly slot: ItemSlot;
       readonly negative: Pole;
       readonly positive: Pole;
-    }
-  | {
-      readonly kind: "color";
-      readonly id: string;
-      readonly prompt: string;
-      readonly options: readonly Color[];
     };
 
 export const QUESTIONS = [
@@ -196,13 +190,7 @@ export const QUESTIONS = [
       detail: "상대 팀들을 압도한 리그의 지배자",
     },
   },
-  {
-    kind: "color",
-    id: "q10",
-    prompt: "좋아하는 색상이나 퍼스널 컬러가 있으신가요?",
-    options: ["빨강", "파랑", "노랑", "검정", "흰색"],
-  },
 ] as const satisfies readonly Question[];
 
-// 데이터에서 id만 뽑아 "q1" | ... | "q10" 자동 생성
+// 데이터에서 id만 뽑아 "q1" | ... | "q9" 자동 생성
 export type QuestionId = (typeof QUESTIONS)[number]["id"];

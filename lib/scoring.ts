@@ -1,12 +1,5 @@
 import { AXES } from "./types";
-import type {
-  Axis,
-  AxisVector,
-  ChoiceIndex,
-  Color,
-  LeagueFilter,
-  Team,
-} from "./types";
+import type { AxisVector, ChoiceIndex, LeagueFilter, Team } from "./types";
 import { CLUBS } from "./clubs";
 import { QUESTIONS } from "./questions";
 import { ITEM_VALUES, AXIS_SCALE, COS_BAND } from "./scoring-config";
@@ -18,7 +11,6 @@ type ScaleId = Extract<(typeof QUESTIONS)[number], { kind: "scale" }>["id"];
 export interface MatchInput {
   readonly league: LeagueFilter; // Q1 리그 필터
   readonly choices: Record<ScaleId, ChoiceIndex>; // Q2 ~ Q9 선택 인덱스
-  readonly color: Color; // Q10 색상
 }
 
 // 추천 결과
@@ -28,7 +20,7 @@ export interface MatchResult {
   readonly rivalSlug: string; // 상극 팀
 }
 
-// 답변 8개 -> 4축 점수 벡터
+// 답변 8개 → 4축 점수 벡터
 export function scoreAxes(choices: Record<ScaleId, ChoiceIndex>): AxisVector {
   const sum: AxisVector = { tactics: 0, resource: 0, organization: 0, goal: 0 };
   const count: AxisVector = {
@@ -71,4 +63,27 @@ function cosine(a: AxisVector, b: AxisVector): number {
 // euclidean (두 점 사이 거리)
 function euclidean(a: AxisVector, b: AxisVector): number {
   return Math.sqrt(AXES.reduce((s, axis) => s + (a[axis] - b[axis]) ** 2, 0));
+}
+
+// 전체 매칭: 입력 → 추천
+export function matchTeam(input: MatchInput): MatchResult {
+  const userAxes = scoreAxes(input.choices);
+  const pool = CLUBS.filter(
+    (team) => input.league === "ALL" || team.league === input.league,
+  );
+  const ranked = pool
+    .map((team) => ({ team, cos: cosine(userAxes, team.coords) }))
+    .sort((a, b) => b.cos - a.cos);
+  const top = ranked[0].cos;
+  const band = ranked.filter((r) => r.cos >= top - COS_BAND);
+  const winner = band.reduce((best, r) =>
+    euclidean(userAxes, r.team.coords) < euclidean(userAxes, best.team.coords)
+      ? r
+      : best,
+  );
+  return {
+    userAxes,
+    winner: winner.team,
+    rivalSlug: winner.team.rivalSlug,
+  };
 }

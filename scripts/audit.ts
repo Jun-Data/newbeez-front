@@ -18,16 +18,27 @@ function choicesFor(i: number): MatchInput["choices"] {
   return choices;
 }
 
-// 한 리그 전수 감사 → 팀별 우승 횟수
-function auditLeague(league: LeagueFilter) {
+// 한 리그 전수 감사 → 팀별 우승 (가중치) 집계
+// weightOf: 답 하나의 가중치. 조합 가중치 = 8개 답 가중치의 곱.
+function auditLeague(
+  league: LeagueFilter,
+  weightOf: (c: ChoiceIndex) => number,
+) {
   const counts: Record<string, number> = {};
   const pool = CLUBS.filter((t) => league === "ALL" || t.league === league);
   pool.forEach((t) => (counts[t.slug] = 0));
 
-  const total = 4 ** SCALE_IDS.length; // 65536
-  for (let i = 0; i < total; i++) {
-    const { winner } = matchTeam({ league, choices: choicesFor(i) });
-    counts[winner.slug] += 1;
+  const combos = 4 ** SCALE_IDS.length; // 65536
+  let total = 0;
+  for (let i = 0; i < combos; i++) {
+    const choices = choicesFor(i);
+    const w = Object.values(choices).reduce<number>(
+      (acc, c) => acc * weightOf(c),
+      1,
+    );
+    const { winner } = matchTeam({ league, choices });
+    counts[winner.slug] += w;
+    total += w;
   }
   return { counts, total };
 }
@@ -40,24 +51,36 @@ function assert(cond: boolean, msg: string) {
   }
 }
 
-// 실행: 리그마다 감사 + 통계 + 단언
-for (const league of LEAGUES) {
-  const { counts, total } = auditLeague(league);
-  const entries = Object.entries(counts)
-    .map(([slug, n]) => [slug, (n / total) * 100] as const)
-    .sort((a, b) => b[1] - a[1]);
-  const pcts = entries.map((e) => e[1]);
-  const max = Math.max(...pcts);
-  const min = Math.min(...pcts);
-  const starved = pcts.filter((p) => p === 0).length;
+// 응답 모델: 균등 vs 중앙편향(가운데 답 1·2 = "약간"을 2배 가중)
+const MODELS = [
+  { name: "균등", weightOf: () => 1 },
+  { name: "중앙편향", weightOf: (c: ChoiceIndex) => (c === 1 || c === 2 ? 2 : 1) },
+];
 
-  console.log(
-    `\n[${league}] ${entries.map(([s, p]) => `${s} ${p.toFixed(1)}%`).join("  ")}`,
-  );
-  console.log(`  최대/최소 ${(max / min).toFixed(2)}배, 굶는 팀 ${starved}`);
+// 실행: 모델 × 리그마다 감사 + 통계 + 단언
+for (const model of MODELS) {
+  console.log(`\n===== ${model.name} 모델 =====`);
+  for (const league of LEAGUES) {
+    const { counts, total } = auditLeague(league, model.weightOf);
+    const entries = Object.entries(counts)
+      .map(([slug, n]) => [slug, (n / total) * 100] as const)
+      .sort((a, b) => b[1] - a[1]);
+    const pcts = entries.map((e) => e[1]);
+    const max = Math.max(...pcts);
+    const min = Math.min(...pcts);
+    const starved = pcts.filter((p) => p === 0).length;
 
-  assert(starved === 0, `${league}: 굶는 팀 ${starved}개`);
-  assert(max / min <= 5, `${league}: 최대/최소 ${(max / min).toFixed(2)}배`);
+    console.log(
+      `\n[${league}] ${entries.map(([s, p]) => `${s} ${p.toFixed(1)}%`).join("  ")}`,
+    );
+    console.log(`  최대/최소 ${(max / min).toFixed(2)}배, 굶는 팀 ${starved}`);
+
+    assert(starved === 0, `${model.name}/${league}: 굶는 팀 ${starved}개`);
+    assert(
+      max / min <= 5,
+      `${model.name}/${league}: 최대/최소 ${(max / min).toFixed(2)}배`,
+    );
+  }
 }
 
-console.log("\n✅ 감사 통과");
+console.log("\n✅ 감사 통과 (균등 + 중앙편향)");

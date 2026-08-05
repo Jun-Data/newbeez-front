@@ -14,7 +14,6 @@ export const CLUBS: readonly Team[] = [
     slug: "arsenal",
     name: "아스날",
     league: "EPL",
-
     rivalSlug: "tottenham",
     coords: { tactics: -4, resource: -3, organization: -5, goal: 1 },
   },
@@ -22,7 +21,6 @@ export const CLUBS: readonly Team[] = [
     slug: "liverpool",
     name: "리버풀",
     league: "EPL",
-
     rivalSlug: "man-utd",
     coords: { tactics: 4, resource: -1, organization: -1, goal: 3 },
   },
@@ -30,7 +28,6 @@ export const CLUBS: readonly Team[] = [
     slug: "tottenham",
     name: "토트넘",
     league: "EPL",
-
     rivalSlug: "arsenal",
     coords: { tactics: 1, resource: 2, organization: 2, goal: -5 },
   },
@@ -38,7 +35,6 @@ export const CLUBS: readonly Team[] = [
     slug: "chelsea",
     name: "첼시",
     league: "EPL",
-
     rivalSlug: "tottenham",
     coords: { tactics: -3, resource: 5, organization: 2, goal: 2 },
   },
@@ -46,7 +42,6 @@ export const CLUBS: readonly Team[] = [
     slug: "man-utd",
     name: "맨유",
     league: "EPL",
-
     rivalSlug: "liverpool",
     coords: { tactics: -1, resource: 4, organization: 3, goal: 3 },
   },
@@ -56,7 +51,6 @@ export const CLUBS: readonly Team[] = [
     slug: "real-madrid",
     name: "레알 마드리드",
     league: "ETC",
-
     rivalSlug: "barcelona",
     coords: { tactics: 4, resource: 4, organization: 5, goal: 5 },
   },
@@ -64,7 +58,6 @@ export const CLUBS: readonly Team[] = [
     slug: "barcelona",
     name: "바르셀로나",
     league: "ETC",
-
     rivalSlug: "real-madrid",
     coords: { tactics: 5, resource: -3, organization: -5, goal: 4 },
   },
@@ -72,7 +65,6 @@ export const CLUBS: readonly Team[] = [
     slug: "atletico",
     name: "아틀레티코 마드리드",
     league: "ETC",
-
     rivalSlug: "real-madrid",
     coords: { tactics: -5, resource: 2, organization: -4, goal: -3 },
   },
@@ -80,7 +72,6 @@ export const CLUBS: readonly Team[] = [
     slug: "bayern",
     name: "바이에른 뮌헨",
     league: "ETC",
-
     rivalSlug: "dortmund",
     coords: { tactics: 4, resource: 2, organization: -3, goal: 5 },
   },
@@ -88,7 +79,6 @@ export const CLUBS: readonly Team[] = [
     slug: "dortmund",
     name: "도르트문트",
     league: "ETC",
-
     rivalSlug: "bayern",
     coords: { tactics: 2, resource: -5, organization: -1, goal: -5 },
   },
@@ -96,7 +86,6 @@ export const CLUBS: readonly Team[] = [
     slug: "psg",
     name: "PSG",
     league: "ETC",
-
     rivalSlug: "real-madrid",
     coords: { tactics: 5, resource: 5, organization: 1, goal: 4 },
   },
@@ -104,7 +93,6 @@ export const CLUBS: readonly Team[] = [
     slug: "inter",
     name: "인테르",
     league: "ETC",
-
     rivalSlug: "ac-milan",
     coords: { tactics: -4, resource: -1, organization: -2, goal: 4 },
   },
@@ -112,7 +100,6 @@ export const CLUBS: readonly Team[] = [
     slug: "ac-milan",
     name: "AC밀란",
     league: "ETC",
-
     rivalSlug: "inter",
     coords: { tactics: -3, resource: -3, organization: 4, goal: 2 },
   },

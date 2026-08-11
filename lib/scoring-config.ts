@@ -12,5 +12,5 @@ export const ITEM_VALUES: Record<
 // 축 점수 = 두 문항 평균 * AXIS_SCALE(범위 ±5 복원)
 export const AXIS_SCALE = 1.25;
 
-// 근소 동점 밴드 (코사인 유사도 단위) - 이 안이면 색·거리로 가름
+// 근소 동점 밴드 (코사인 유사도 단위) - 이 안이면 유클리드 거리로 가름
 export const COS_BAND = 0.02;

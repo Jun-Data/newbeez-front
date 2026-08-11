@@ -17,9 +17,9 @@ export type AxisVector = Record<Axis, number>;
 
 // 팀 하나의 모양
 export interface Team {
-  readonly slug: string; // URL 식별자(/result/[slug])
+  readonly slug: string; // URL 식별자(/football/result/[slug])
   readonly name: string; // 화면 표시명 (한글)
   readonly league: League;
-  readonly rivalSlug: string; // 고정 라이벌(상극팀)
+  readonly rivalSlug: string; // 고정 라이벌
   readonly coords: AxisVector;
 }

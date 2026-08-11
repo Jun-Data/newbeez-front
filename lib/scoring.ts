@@ -17,7 +17,7 @@ export interface MatchInput {
 export interface MatchResult {
   readonly userAxes: AxisVector; // 4축 점수 (그래프용)
   readonly winner: Team; // 추천 팀
-  readonly rivalSlug: string; // 상극 팀
+  readonly rivalSlug: string; // 라이벌 팀
 }
 
 // 답변 8개 → 4축 점수 벡터

@@ -35,7 +35,7 @@
   - 팀 표시 정보(배지·경기장·감독·카피)·참여자 수·댓글 → 백엔드 DB
   - 두 층을 잇는 계약 = **`slug`**
 - 별도 레포 **newbeez-back** (Spring Boot, `localhost:8080`).
-- **시스템 설계(라우팅·렌더링·스키마·API)는 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).**
+- **시스템 설계(라우팅·렌더링·스키마·API)는 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 지금 만드는 것만. MVP 이후는 [docs/FUTURE.md](docs/FUTURE.md).
 - **제품 설계(15팀 좌표·9문항·추천 알고리즘)는 `newbeez-back/docs/` 참고.**
 
 ## Git & 작업 방식

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "quiz:audit": "tsx scripts/audit.ts"
+    "quiz:audit": "tsx scripts/audit.ts && tsx scripts/audit-answer-code.ts"
   },
   "dependencies": {
     "next": "16.2.6",

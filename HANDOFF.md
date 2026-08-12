@@ -3,8 +3,8 @@
 > 세션 시작 시 이 파일을 먼저 읽고 이어서 작업.
 > **durable 설계(좌표·문항·알고리즘) = `newbeez-back/docs/` 가 source of truth — 여기에 중복하지 말 것.**
 > **시스템 설계(라우팅·렌더링·스키마·API·MVP 경계) = [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 2026-08-11 신설, 아래 요약보다 우선.
-> **마지막 업데이트: 2026-08-12 — 인트로 화면 병합·푸시 완료. 다음은 답코드 모듈**
-> **브랜치: `main` 하나뿐 (`1a44fdf`, origin 동기화 · 워킹트리 깨끗) — feat/* 전부 병합·삭제됨**
+> **마지막 업데이트: 2026-08-12 — 답코드 모듈 완성(감사 통과). 다음은 퀴즈 진행 화면**
+> **브랜치: `main` 하나뿐 (`a15ba7a`, 워킹트리 깨끗) · feat/* 전부 병합·삭제 · ⚠️ origin 푸시 대기**
 
 ## 🎯 지금 어디까지 왔나
 - ✅ **설계 확정** (`newbeez-back/docs/`) — 15팀 좌표·문항·매칭 알고리즘
@@ -14,6 +14,8 @@
 - ✅ **폰트·테마 정리** — Pretendard 서브셋 400/600/700(806KB) · Geist 제거 · 다크모드 제거(라이트 고정)
 - ✅ **척도 UI 확정** — 세로축 4점 + 전점 라벨 (ARCHITECTURE §8.1). 디자인 시안 요청 단계
 - ✅ **호스팅 조사 완료** — 1순위 OCI Always Free 서울. **결정은 보류**(MVP에 불필요, 단 A1 확보가 복불복이라 미리 시도 권장)
+- ✅ **답코드 모듈** (`lib/answer-code.ts`) — 답 ⇄ 9자리 문자열. 왕복 196,608건 + 계약 가드 3종 감사 통과
+- ✅ **문서 분리** — `ARCHITECTURE.md`(423줄, 지금 만드는 것) / `FUTURE.md`(159줄, MVP 이후)
 - ✅ **S1 채점 코어 완성** (6파일, tsc 통과 + 감사 통과, 커밋·푸시 완료)
   - `lib/types.ts` — 공용 타입 (도메인별 정리)
   - `lib/clubs.ts` — 15팀 좌표·리그·라이벌 (colorCode 제거됨)
@@ -28,15 +30,15 @@
   - **DoD 충족**: `pnpm quiz:audit` 통과 — 굶는 팀 0 · EPL 2.4·ETC 2.7·**ALL 4.4배** · **균등+중앙편향 둘 다 통과**
 - ⬜ **S1.5 coord-spread** ← 선택: 좌표 방향 분산으로 **ALL 4.4배 → ~2.25배**. 부호·정체성 보존, 감사 통과까지만
 - ✅ **S2 quiz-intro** (완료 · `47952a6` → main 병합): `/football/quiz` 인트로 + 히어로 이미지
-- ⬜ **S2.5 answer-code** ← **다음 작업**: `lib/answer-code.ts` — 9자리 인코딩/디코딩/검증
-  - 왜 화면보다 먼저인가: **URL은 공유되면 못 바꾸는 계약**이고, 순수함수라 화면 없이 전수 검증 가능(3리그 × 65,536답 왕복). 진행·결과 화면이 둘 다 여기에 의존
-  - DoD: `encode → decode → 원본 일치` 전수 통과 + 잘못된 코드는 `null` 반환
-  - ⚠️ 검증이 `matchTeam` **호출 전에** 있어야 함 (빈 풀 크래시·NaN 전파, ARCHITECTURE §3)
-  - 디자인 시안과 무관하게 진행 가능
+- ✅ **S2.5 answer-code** (완료 · `587b4d2`): `lib/answer-code.ts` + `scripts/audit-answer-code.ts`
+  - 결과 화면에서 `decodeAnswerCode` 가 `null` 이면 **`matchTeam` 을 부르지 말 것** (ARCHITECTURE §3.2)
 - ⬜ **S3 clubs-data** — TheSportsDB 1회성 프리페치 → `data/clubs.source.json` + **배지 15장 다운로드**(URL 링크 금지) + 팀 표시 데이터
 - ⬜ **S4 landing** — `/football` 얇은 안내(히어로 + 퀴즈 버튼) + 출처 푸터 + **조기 배포**. ~~15팀 그리드~~ 제외 결정
-- ⬜ **S5 quiz-store** — Zustand + `/football/quiz/play` 셸 + Q1 (인트로가 이 경로로 링크 중, 아직 404)
-- ⬜ **S6 quiz-scale** — `<BipolarScale>` **세로축 4점 + 전점 라벨** (ARCHITECTURE §8.1). 디자인 시안 확정 후
+- ⬜ **S5 quiz-store** ← **다음 후보 A**: Zustand 스토어 + `/football/quiz/play` 셸
+  - 인트로가 이 경로로 링크 중인데 **아직 404**
+  - 스토어는 `MatchInput` 모양 그대로 담으면 `matchTeam`·`encodeAnswerCode` 에 변환 없이 넘어간다
+  - **스토어·라우트는 디자인 무관**하나 실제 화면은 시안 필요
+- ⬜ **S6 quiz-scale** — `<BipolarScale>` **세로축 4점 + 전점 라벨** (ARCHITECTURE §8.1). **디자인 시안 대기 중**
 - ⬜ **S7 quiz-flow** — 진행바·뒤로·자동진행·완료 이동
 - ⬜ **S8 result** — 한국어 카피 15팀 + `/football/result/[slug]` + 답코드 **9자리**(리그1+성향8) + 4축 다이아몬드
   - ⚠️ **파싱 검증 필수** — `matchTeam` 호출 전에 막지 않으면 조작 URL로 페이지가 죽는다 (ARCHITECTURE §3)

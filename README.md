@@ -52,7 +52,8 @@ docs/                     설계 문서
 
 | 문서 | 내용 |
 |---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | **시스템 설계** — 라우팅·렌더링 전략·DB 스키마·API·MVP 경계 |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | **시스템 설계** — 라우팅·렌더링 전략·DB 스키마·API·UI 방침 |
+| [docs/FUTURE.md](docs/FUTURE.md) | MVP 이후 — 댓글·입문 허브·UGC·인증·백엔드 호스팅 |
 | [docs/club-people-2026-08.md](docs/club-people-2026-08.md) | 15팀 감독·스타·레전드 큐레이션 (검증 이력 포함) |
 | [HANDOFF.md](HANDOFF.md) | 진행 상황과 다음 할 일 |
 | [CLAUDE.md](CLAUDE.md) | 작업 규칙 |

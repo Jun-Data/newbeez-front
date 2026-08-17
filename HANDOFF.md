@@ -3,8 +3,8 @@
 > 세션 시작 시 이 파일을 먼저 읽고 이어서 작업.
 > **durable 설계(좌표·문항·알고리즘) = `newbeez-back/docs/` 가 source of truth — 여기에 중복하지 말 것.**
 > **시스템 설계(라우팅·렌더링·스키마·API·MVP 경계) = [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 2026-08-11 신설, 아래 요약보다 우선.
-> **마지막 업데이트: 2026-08-12 — 답코드 모듈 완성(감사 통과). 다음은 퀴즈 진행 화면**
-> **브랜치: `main` 하나뿐 (`a15ba7a`, 워킹트리 깨끗) · feat/* 전부 병합·삭제 · ⚠️ origin 푸시 대기**
+> **마지막 업데이트: 2026-08-17 — 인트로 기본 완성(OG·헤더·CTA). 다음은 인트로 공유·참여자 영역**
+> **브랜치: `main` 하나뿐 (`ea550e4`, 워킹트리 깨끗, origin 동기화) · feat/* 전부 병합·삭제**
 
 ## 🎯 지금 어디까지 왔나
 - ✅ **설계 확정** (`newbeez-back/docs/`) — 15팀 좌표·문항·매칭 알고리즘
@@ -31,6 +31,13 @@
 - ⬜ **S1.5 coord-spread** ← 선택: 좌표 방향 분산으로 **ALL 4.4배 → ~2.25배**. 부호·정체성 보존, 감사 통과까지만
 - ✅ **S2 quiz-intro** (완료 · `47952a6` → main 병합): `/football/quiz` 인트로 + 히어로 이미지
 - ✅ **S2.5 answer-code** (완료 · `587b4d2`): `lib/answer-code.ts` + `scripts/audit-answer-code.ts`
+- ✅ **S2.7 intro-og** (완료 · `bafe409`): OG 이미지(1200×634·138KB)+alt · 로고 헤더(#f2fafe) · CTA 368×72(방구석연구소 실측과 동일) · 히어로 4px 크롭(#b0cd2a 이음매) · sr-only h1 · 서비스명 "팀 성향 테스트" 통일
+- 🔨 **S2.8 intro-social** ← **다음 작업**: 인트로 공유·참여자 영역
+  - `page.tsx` 는 서버 컴포넌트 유지(**metadata 는 서버 전용** — Next 문서 확인됨). 상호작용 잎사귀만 `"use client"` 분리: `ShareSection`(공유 버튼) · `ParticipantCount`(참여자 수)
+  - 순서: ① 링크 복사(`navigator.clipboard`, 외부 준비 0) → ② 참여자 수 자리(`null`이면 숨김 — 백엔드 붙으면 fetch 만 연결) → ③ 카카오 공유 → ④ 배포 후: 카카오 콘솔에 실도메인 추가 + `metadataBase` 교체 + 실공유 확인
+  - ⚠️ 카카오는 도메인을 **두 곳** 등록해야 함([플랫폼] JavaScript SDK 도메인 + [제품 링크 관리] 웹 도메인 — 한 곳만 하면 4011 오류). `localhost:3000` 등록 가능 → 버튼 동작까지 로컬 확인 가능. JS 키는 공개 키라 커밋 가능하나 도메인 제한이 유일한 보호막
+  - 카카오 개발자 앱 등록·JS 키 발급은 **사용자가 직접** (developers.kakao.com)
+  - 레퍼런스 실측(방구석연구소): 시작하기 → 참여자수 → 공유(카카오·트위터·링크복사 54×54) 순. CTA 가 사회적 증거보다 위
   - 결과 화면에서 `decodeAnswerCode` 가 `null` 이면 **`matchTeam` 을 부르지 말 것** (ARCHITECTURE §3.2)
 - ⬜ **S3 clubs-data** — TheSportsDB 1회성 프리페치 → `data/clubs.source.json` + **배지 15장 다운로드**(URL 링크 금지) + 팀 표시 데이터
 - ⬜ **S4 landing** — `/football` 얇은 안내(히어로 + 퀴즈 버튼) + 출처 푸터 + **조기 배포**. ~~15팀 그리드~~ 제외 결정

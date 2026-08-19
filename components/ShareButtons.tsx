@@ -1,6 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import Script from "next/script";
+
+const KAKAO_JS_KEY = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
+const KAKAO_SDK_URL = "https://t1.kakaocdn.net/kakao_js_sdk/2.8.2/kakao.min.js";
+const KAKAO_SDK_INTEGRITY =
+  "sha384-zt/G7/KfaRQ9dT/QIkS0ujMtzouJqzuSJcXVQu50x0rl/+mD1dc70AeOejVbMD9E";
+
+declare global {
+  interface Window {
+    Kakao?: {
+      isInitialized(): boolean;
+      init(key: string): void;
+      Share: { sendScrap(settings: { requestUrl: string }): void };
+    };
+  }
+}
 
 export default function ShareButtons() {
   const [copied, setCopied] = useState(false);
@@ -27,8 +43,43 @@ export default function ShareButtons() {
     );
   }
 
+  function shareKakao() {
+    window.Kakao?.Share.sendScrap({ requestUrl: window.location.href });
+  }
+
   return (
     <div className="flex items-center justify-center gap-4">
+      {KAKAO_JS_KEY && (
+        <>
+          <Script
+            src={KAKAO_SDK_URL}
+            integrity={KAKAO_SDK_INTEGRITY}
+            crossOrigin="anonymous"
+            strategy="lazyOnload"
+            onLoad={() => {
+              if (window.Kakao && !window.Kakao.isInitialized()) {
+                window.Kakao.init(KAKAO_JS_KEY);
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={shareKakao}
+            aria-label="카카오톡으로 공유"
+            className="flex size-14 items-center justify-center rounded-full bg-[#fee500] text-[#000000]"
+          >
+            <svg
+              width={26}
+              height={26}
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M12 18.75c-.591 0-1.1697-.0413-1.7317-.1209-.5626.3965-3.813 2.6797-4.1198 2.7225 0 0-.1258.0489-.2328-.0141s-.0876-.2282-.0876-.2282c.0322-.2198.8426-3.0183.992-3.5333-2.7452-1.36-4.5701-3.7686-4.5701-6.5135C2.25 6.8168 6.6152 3.375 12 3.375s9.75 3.4418 9.75 7.6875c0 4.2457-4.3652 7.6875-9.75 7.6875z" />
+            </svg>
+          </button>
+        </>
+      )}
       <button
         type="button"
         onClick={shareX}

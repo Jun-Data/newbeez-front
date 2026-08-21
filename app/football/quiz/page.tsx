@@ -4,6 +4,7 @@ import Image from "next/image";
 import quizStartImage from "@/public/quiz_start.png";
 import logo from "@/public/logo.png";
 import ShareButtons from "@/components/ShareButtons";
+import ParticipantCount from "./_components/ParticipantCount";
 
 export const metadata: Metadata = {
   title: "해외축구 팀 성향 테스트",
@@ -41,6 +42,7 @@ export default function QuizIntroPage() {
           >
             시작하기
           </Link>
+          <ParticipantCount />
           <ShareButtons />
         </div>
       </main>

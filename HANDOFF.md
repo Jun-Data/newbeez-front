@@ -38,7 +38,9 @@
   - 링크 복사 = `navigator.clipboard` + **2초 토스트**(모달 아님 — 푸망도 `copied_toast`, 방구석연구소만 모달) · X = `URLSearchParams` + 팝업 550×420 + `noopener` · 카카오 = `next/script` lazyOnload + SRI + `Share.sendScrap({requestUrl})`
   - **키 없으면 카카오 버튼·SDK를 아예 렌더 안 함** — 저장소를 받은 사람이 `.env.local` 없이 실행해도 화면 정상
   - `app/football/quiz/_components/ParticipantCount.tsx` — **인트로 전용이라 라우트에 콜로케이션**. 지금은 `return null`이고 구현 규칙은 주석에 보존(F6에서 채움)
-  - ⚠️ **남은 빚**: 안드로이드 카톡 인앱 브라우저는 `navigator.clipboard` 미지원 → 지금은 조용히 실패해 **고장 난 버튼으로 보임**. `document.execCommand` 폴백 필요(유입 상당수가 그 환경)
+  - ⚠️ **배포 후 실측할 것**: 안드로이드 **카톡 인앱 브라우저(WebView) 일부 기기**에서 `navigator.clipboard`가 막힐 수 있음(호스트 앱이 `clipboard-write` 권한을 안 열면 `NotAllowedError`). 안드로이드 크롬은 정상이고, 카카오·X 버튼은 무관 → 증상은 **"링크 복사 버튼만 무반응"**
+    - 지금은 localhost라 **재현 자체가 불가**. HTTPS 배포 후 본인 폰 카톡에서 눌러 10초면 판정
+    - 실패가 확인되면 그때 `document.execCommand("copy")` 폴백 추가(deprecated이지만 인앱에서 동작). **확인 전에 미리 넣지 말 것** — 검증할 환경이 없어 동작을 보장할 수 없음
   - 컴포넌트 배치 규칙 확정: **한 라우트만 쓰면 그 라우트 `_components/`, 두 곳 이상이면 최상위 `components/`**. Next 문서는 이 주제에 unopinionated
 - ⬜ **S3 clubs-data** — TheSportsDB 1회성 프리페치 → `data/clubs.source.json` + **배지 15장 다운로드**(URL 링크 금지) + 팀 표시 데이터
 - ⬜ **S4 landing** — `/football` 얇은 안내(히어로 + 퀴즈 버튼) + 출처 푸터 + **조기 배포**. ~~15팀 그리드~~ 제외 결정

@@ -3,8 +3,8 @@
 > 세션 시작 시 이 파일을 먼저 읽고 이어서 작업.
 > **durable 설계(좌표·문항·알고리즘) = `newbeez-back/docs/` 가 source of truth — 여기에 중복하지 말 것.**
 > **시스템 설계(라우팅·렌더링·스키마·API·MVP 경계) = [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 2026-08-11 신설, 아래 요약보다 우선.
-> **마지막 업데이트: 2026-08-21 — S2.8 완료(공유 3버튼 + 참여자 수 자리). 다음은 `/football/quiz/play` 404 해소**
-> **브랜치: `main` 하나뿐 (`7b51002`, 워킹트리 깨끗, origin 동기화) · feat/* 전부 병합·삭제**
+> **마지막 업데이트: 2026-08-25 — S5 진행 중. `/football/quiz/play` 404 해소·9문항 동작. 남은 건 완료 패널 하나**
+> **브랜치: `feat/quiz-store` (`9f24cb6`, 워킹트리 깨끗, origin 푸시됨, **main 미병합**) · `main`은 `8945d9e`**
 
 ## 🎯 지금 어디까지 왔나
 - ✅ **설계 확정** (`newbeez-back/docs/`) — 15팀 좌표·문항·매칭 알고리즘
@@ -16,7 +16,8 @@
 - ✅ **호스팅 조사 완료** — 1순위 OCI Always Free 서울. **결정은 보류**(MVP에 불필요, 단 A1 확보가 복불복이라 미리 시도 권장)
 - ✅ **답코드 모듈** (`lib/answer-code.ts`) — 답 ⇄ 9자리 문자열. 왕복 196,608건 + 계약 가드 3종 감사 통과
 - ✅ **문서 분리** — `ARCHITECTURE.md`(423줄, 지금 만드는 것) / `FUTURE.md`(159줄, MVP 이후)
-- ✅ **인트로 완성** (`/football/quiz`) — OG·헤더·CTA·**공유 3버튼**·참여자 수 자리. 남은 건 **배포 후 카카오 실검증**뿐. 단 CTA가 가리키는 `/football/quiz/play`가 **아직 404**
+- ✅ **인트로 완성** (`/football/quiz`) — OG·헤더·CTA·**공유 3버튼**·참여자 수 자리. 남은 건 **배포 후 카카오 실검증**뿐. ~~CTA 404~~ **해소됨(S5)**
+- 🔨 **S5 진행 화면 동작** (`/football/quiz/play`) — 스토어·라우트·9문항 클릭 완성. **완료 패널만 남음**
 - ✅ **S1 채점 코어 완성** (6파일, tsc 통과 + 감사 통과, 커밋·푸시 완료)
   - `lib/types.ts` — 공용 타입 (도메인별 정리)
   - `lib/clubs.ts` — 15팀 좌표·리그·라이벌 (colorCode 제거됨)
@@ -45,12 +46,22 @@
 - ⬜ **S3 clubs-data** — TheSportsDB 1회성 프리페치 → `data/clubs.source.json` + **배지 15장 다운로드**(URL 링크 금지) + 팀 표시 데이터
 - ⬜ **S4 landing** — `/football` 얇은 안내(히어로 + 퀴즈 버튼) + 출처 푸터 + **조기 배포**. ~~15팀 그리드~~ 제외 결정
   - 🔺 **우선순위 올라감**: 카카오 공유는 **배포 전까지 검증 불가**(아래 포인터 참고). S2.8 결과물을 확인하려면 배포가 선행돼야 함
-- 🔨 **S5 quiz-store** ← **다음 작업**: Zustand 스토어 + `/football/quiz/play` 셸
-  - 인트로 CTA가 이 경로로 링크 중인데 **아직 404** — 방금 공유 기능을 붙인 페이지라 가장 먼저 막아야 할 구멍
-  - 스토어는 `MatchInput` 모양 그대로 담으면 `matchTeam`·`encodeAnswerCode` 에 변환 없이 넘어간다
-  - **스토어·라우트는 디자인 무관**하나 실제 화면은 시안 필요
-- ⬜ **S6 quiz-scale** — `<BipolarScale>` **세로축 4점 + 전점 라벨** (ARCHITECTURE §8.1). **디자인 시안 대기 중**
-- ⬜ **S7 quiz-flow** — 진행바·뒤로·자동진행·완료 이동
+- 🔨 **S5 quiz-store** ← **진행 중** (`feat/quiz-store` 푸시됨, **main 미병합**)
+  - ✅ `_store.ts` (`7cf0093`) — 스토어 + `toMatchInput` 검문소
+  - ✅ `page.tsx` · `_components/QuizPlay.tsx` (`9f24cb6`) — 라우트 + 진행 화면. **404 해소, 9문항 끝까지 동작**
+  - ⬜ **남은 것 = 완료 패널 하나** (~30줄, 디자인 무관): `index === 9`일 때 `toMatchInput → matchTeam → encodeAnswerCode` 결과를 텍스트로 찍어 **전 구간 검증**. 팀명·9자리 답코드·4축 점수·이동할 주소 + 다시하기
+    - **S8에서 `router.replace(...)` 한 줄로 통째로 교체될 임시 화면** — 링크로 걸지 말 것(결과 라우트가 아직 404)
+    - 끝나면 `pnpm lint`·`pnpm build` → **main 병합**
+- ⬜ **S6 quiz-scale** — `<BipolarScale>` **세로축 4점 + 전점 라벨** (ARCHITECTURE §8.1). **디자인 시안 대기 중 = 이 슬라이스의 블로커**
+  - 재료는 이미 있음: 색 `#b0cd2a`·`#2c2735`·`#f2fafe`(인트로) · Pretendard 400/600/700 · `max-w-lg` 모바일 우선 · CTA 368×72 실측
+  - `QuizPlay.tsx`의 `scaleOptions()`를 그대로 가져가면 됨 (극 두 개 → 선택지 4개 파생)
+  - **오탭 방지가 디자인 요구사항** — 자동 진행이라 잘못 누르면 즉시 확정. 선택지 간격을 넉넉히
+- ⬜ **S7 quiz-flow** — 진행바 · 자동진행(지연) · 완료 이동 · **진입 가드**
+  - 진행바는 **9칸 세그먼트 표시 전용**. ~~칸 클릭으로 문항 점프~~ 기각 — 375px에서 한 칸 ≈35px로 터치 권장치(44px) 미달이라 오탭 복구 장치가 오탭을 유발
+  - ~~뒤로 버튼~~ 은 **S5에서 이미 넣음**(`← 이전`, 한 칸씩)
+  - **진입 가드**: 새로고침·주소 직접 입력이면 인트로로 `router.replace` (레퍼런스 실측 — 푸망·방구석연구소 둘 다 그렇게 동작)
+    - 구현: `_store.ts`에 모듈 변수 `let started = false` + 인트로 CTA를 클라이언트 컴포넌트로 바꿔 클릭 시 `markStarted()`. **모듈 메모리는 앱 내부 이동에는 살아남고 새로고침에는 사라지므로** 이 둘을 구분할 수 있음
+    - ⚠️ 정적 HTML에 Q1이 이미 그려져 있어 **리다이렉트 전 한 프레임 깜빡임**이 생김. 없애려면 추가 처리 필요
 - ⬜ **S8 result** — 한국어 카피 15팀 + `/football/result/[slug]` + 답코드 **9자리**(리그1+성향8) + 4축 다이아몬드
   - ⚠️ **파싱 검증 필수** — `matchTeam` 호출 전에 막지 않으면 조작 URL로 페이지가 죽는다 (ARCHITECTURE §3)
 - ⬜ **S9 share** — OG 태그 → 카카오 SDK(도메인 확정 후) · **S10 og-image**(동적)
@@ -79,6 +90,21 @@
 - **SDK 버전은 찍어보지 말고** [공식 다운로드 페이지](https://developers.kakao.com/docs/ko/javascript/download)에서 확인. 버전과 `integrity`는 **반드시 짝**(하나만 바꾸면 스크립트가 조용히 차단됨)
 - **웹훅은 안 씀** — 서버가 있어야 하고 `serverCallbackArgs`를 함께 넘겨야 발동. F6 이후 선택
 - 문서: [공유 FAQ](https://developers.kakao.com/docs/ko/kakaotalk-share/faq) · [JS 가이드](https://developers.kakao.com/docs/ko/kakaotalk-share/js-link) · [앱 키 마이그레이션](https://developers.kakao.com/docs/ko/getting-started/app-key-migration) · [데브톡 공유 FAQ](https://devtalk.kakao.com/t/topic/149604)
+
+### 🔵 퀴즈 진행 화면 — S5에서 확정된 것 (2026-08-25)
+- **파일 배치**: `play/_store.ts`(스토어) · `play/page.tsx`(서버, metadata+noindex) · `play/_components/QuizPlay.tsx`(클라이언트, 화면)
+  - **`"use client"` 파일에서는 `metadata`를 못 내보낸다** → 라우트/메타데이터와 화면을 반드시 분리
+  - `robots: { index: false }` — 진행 화면 색인 차단. **유입 착지점은 인트로 하나로** (§4.1)
+- **한 라우트 + 상태 교체**(문항마다 URL을 두지 않음) — 답이 URL에 없어서 `/play/5`를 새로고침하면 "5번 문항인데 답 0개"라는 **모순 상태**가 생긴다
+- **`index`를 스토어에 둔 이유** — 답과 위치가 항상 함께 움직이므로. 컴포넌트 `useState`로 쪼개면 S7 자동진행에서 두 갱신 시스템이 한 핸들러에 섞인다
+- **자동 진행** — 선택 = 답 저장 + 다음 문항. **"다음" 버튼 없음**(탭 18회 → 9회)
+- **`← 이전`(한 칸)과 선택된 답 표시는 넣음** — 자동 진행이라 오탭을 되돌릴 수단이 없으면 **잘못된 답으로 나온 결과**가 공유되고, 그건 이 서비스의 목표를 직접 해친다. 시각적 위계는 낮춤(`text-gray-400`)
+- ~~완료 화면에서 이전~~ — 결과는 **별도 라우트 + `reset`으로 답이 비워짐**. 다시하기로 처음부터가 맞음
+- **`reset`은 언마운트 정리로** (`useEffect(() => reset, [reset])`) — 들어올 때 초기화하면 지난 완료 화면이 한 프레임 비친다. 새로고침은 메모리째 사라지므로 이 장치와 무관
+- ⏸ **새로고침 시 답 유실은 "미룬 것"** — `persist` 미들웨어(sessionStorage)로 해결 가능하나 하이드레이션 깜빡임·낡은 답 복원 방어가 따라온다. 스토어 모양이 이미 저장하기 좋아 **나중에 감싸기만 하면 되고 화면 코드는 안 바뀜**. 배포 후 완주율 보고 결정
+- 📝 **Q7·Q8의 `word`가 어색** (`약간 살림꾼형` · `약간 매각파`) — `word`가 유형 명사라 정도부사 "약간"과 안 붙는다. **`headline`은 감탄·명령형이라 8/9에서 불가**하므로 형식이 아니라 값을 손봐야 함. S6 디자인 얹은 뒤 재검토 (문구 수정은 답코드에 영향 없음 — §3.3)
+- ⚠️ **Tailwind 캐시 함정** — 새 폴더/파일을 여러 개 만든 뒤 **새 클래스만 스타일이 안 먹는** 일이 있었다. Tailwind의 의존은 `import` 그래프 밖(파일 감시)이라 놓칠 수 있음. **`rm -rf .next && pnpm dev`** 로 해결. 서버만 재시작하면 `.next` 캐시가 그대로 재사용돼 안 고쳐짐
+  - 진단 순서: DevTools로 ① 클래스가 붙었나 → ② Styles에 그 CSS 규칙이 있나 → ③ 캐시 삭제. `aria-pressed`가 **스타일과 무관하게 로직을 확인시켜 줘서** 범위를 빨리 좁혔다
 
 ### 그 외
 - **설계 source = `newbeez-back/docs/`** (좌표·문항·알고리즘)

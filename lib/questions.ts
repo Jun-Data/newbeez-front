@@ -2,8 +2,8 @@ import type { Axis, ItemSlot, LeagueFilter } from "./types";
 
 // 성향 문항의 한쪽 극
 export interface Pole {
-  readonly word: string; // 중간 라벨 : 약간 {word}
   readonly headline: string; // 극단 버튼 큰 글씨
+  readonly word: string; // 중간 라벨 : 약간 {word}
   readonly detail: string; // 극단 버튼 부연
 }
 

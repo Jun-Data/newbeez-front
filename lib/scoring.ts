@@ -5,7 +5,10 @@ import { QUESTIONS } from "./questions";
 import { ITEM_VALUES, AXIS_SCALE, COS_BAND } from "./scoring-config";
 
 // 성향 문항 (q2 ~q9)의 id만 뽑기 - kind: "scale" 갈래만 걸러 id 추출
-type ScaleId = Extract<(typeof QUESTIONS)[number], { kind: "scale" }>["id"];
+export type ScaleId = Extract<
+  (typeof QUESTIONS)[number],
+  { kind: "scale" }
+>["id"];
 
 // 선택 요약
 export interface MatchInput {

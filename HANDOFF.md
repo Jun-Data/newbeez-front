@@ -3,8 +3,8 @@
 > 세션 시작 시 이 파일을 먼저 읽고 이어서 작업.
 > **durable 설계(좌표·문항·알고리즘) = `newbeez-back/docs/` 가 source of truth — 여기에 중복하지 말 것.**
 > **시스템 설계(라우팅·렌더링·스키마·API·MVP 경계) = [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 2026-08-11 신설, 아래 요약보다 우선.
-> **마지막 업데이트: 2026-08-26 — S5는 완료 패널 하나 남음. S6 디자인 시안 확정(§8.2) → 블로커 해소**
-> **브랜치: `feat/quiz-store` (`9f24cb6`, 워킹트리 깨끗, origin 푸시됨, **main 미병합**) · `main`은 `8945d9e`**
+> **마지막 업데이트: 2026-08-26 — S5 완료·병합. S6 디자인 시안 확정(§8.2) → 블로커 해소. 다음은 S6**
+> **브랜치: `main` 하나 (`6c7888e`) · feat/* 병합·삭제 · ⚠️ `public/` 배경 후보 PNG 4장 + 루트 `poomang-q.png` 미커밋**
 
 ## 🎯 지금 어디까지 왔나
 - ✅ **설계 확정** (`newbeez-back/docs/`) — 15팀 좌표·문항·매칭 알고리즘
@@ -17,7 +17,7 @@
 - ✅ **답코드 모듈** (`lib/answer-code.ts`) — 답 ⇄ 9자리 문자열. 왕복 196,608건 + 계약 가드 3종 감사 통과
 - ✅ **문서 분리** — `ARCHITECTURE.md`(423줄, 지금 만드는 것) / `FUTURE.md`(159줄, MVP 이후)
 - ✅ **인트로 완성** (`/football/quiz`) — OG·헤더·CTA·**공유 3버튼**·참여자 수 자리. 남은 건 **배포 후 카카오 실검증**뿐. ~~CTA 404~~ **해소됨(S5)**
-- 🔨 **S5 진행 화면 동작** (`/football/quiz/play`) — 스토어·라우트·9문항 클릭 완성. **완료 패널만 남음**
+- ✅ **S5 진행 화면 완성** (`/football/quiz/play`) — 스토어·라우트·9문항·완료 패널. **채점 전 구간 수동 검증됨**
 - ✅ **S1 채점 코어 완성** (6파일, tsc 통과 + 감사 통과, 커밋·푸시 완료)
   - `lib/types.ts` — 공용 타입 (도메인별 정리)
   - `lib/clubs.ts` — 15팀 좌표·리그·라이벌 (colorCode 제거됨)
@@ -46,12 +46,16 @@
 - ⬜ **S3 clubs-data** — TheSportsDB 1회성 프리페치 → `data/clubs.source.json` + **배지 15장 다운로드**(URL 링크 금지) + 팀 표시 데이터
 - ⬜ **S4 landing** — `/football` 얇은 안내(히어로 + 퀴즈 버튼) + 출처 푸터 + **조기 배포**. ~~15팀 그리드~~ 제외 결정
   - 🔺 **우선순위 올라감**: 카카오 공유는 **배포 전까지 검증 불가**(아래 포인터 참고). S2.8 결과물을 확인하려면 배포가 선행돼야 함
-- 🔨 **S5 quiz-store** ← **진행 중** (`feat/quiz-store` 푸시됨, **main 미병합**)
-  - ✅ `_store.ts` (`7cf0093`) — 스토어 + `toMatchInput` 검문소
-  - ✅ `page.tsx` · `_components/QuizPlay.tsx` (`9f24cb6`) — 라우트 + 진행 화면. **404 해소, 9문항 끝까지 동작**
-  - ⬜ **남은 것 = 완료 패널 하나** (~30줄, 디자인 무관): `index === 9`일 때 `toMatchInput → matchTeam → encodeAnswerCode` 결과를 텍스트로 찍어 **전 구간 검증**. 팀명·9자리 답코드·4축 점수·이동할 주소 + 다시하기
-    - **S8에서 `router.replace(...)` 한 줄로 통째로 교체될 임시 화면** — 링크로 걸지 말 것(결과 라우트가 아직 404)
-    - 끝나면 `pnpm lint`·`pnpm build` → **main 병합**
+- ✅ **S5 quiz-store** (완료 · `6c7888e` → main 병합): 스토어 + `/football/quiz/play` + 완료 패널
+  - `_store.ts` — `index`·`league`·`choices` + 액션 5개 + `toMatchInput` 검문소
+  - `page.tsx` 서버(metadata·noindex) / `_components/QuizPlay.tsx` 클라이언트(화면)
+  - **인트로 CTA의 404 해소.** 9문항 자동 진행 · `← 이전` · 선택 표시
+  - **DoD 충족 — 수동 검증** (EPL 기준)
+    - 전부 맨 위 → `000000000` · 4축 **−5** · **아스널** (코사인 0.7702, 2위와 0.77 차)
+    - 전부 맨 아래 → `033333333` · 4축 **+5** · **맨유** (맨시티보다 방향이 맞음)
+    - 양극단이 정확히 ±5 → `AXIS_SCALE = 1.25`("범위 ±5 복원")가 의도대로 동작
+    - **크기가 아니라 방향으로 고른다**는 코사인 설계가 화면에서 확인됨
+  - ⚠️ **완료 패널은 임시** — S8에서 `router.replace("/football/result/…")` 한 줄로 통째 교체
 - ⬜ **S6 quiz-scale** — ~~디자인 시안 대기~~ **✅ 2026-08-26 시안 확정. 블로커 해소**
   - **사양은 ARCHITECTURE §8.2** (Q1=카드 / Q2~Q9=축+원, 원 48·32px, 간격 24·8px, 세로 538px)
   - 시안 출처: **`바탕화면/레퍼런스/Quiz screen design for soccer personality test.pdf`** — 이 프로젝트 전용 시안 10개(1a~1d·2a~2c·3a~3c). **1페이지짜리라 텍스트만 추출되고 이미지는 안 보인다** → `pypdf`로 XObject를 꺼내 PNG로 변환해야 함(PIL 없이도 zlib+struct로 가능)

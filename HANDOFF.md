@@ -4,7 +4,7 @@
 > **durable 설계(좌표·문항·알고리즘) = `newbeez-back/docs/` 가 source of truth — 여기에 중복하지 말 것.**
 > **시스템 설계(라우팅·렌더링·스키마·API·MVP 경계) = [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 2026-08-11 신설, 아래 요약보다 우선.
 > **마지막 업데이트: 2026-08-26 — S5 완료·병합. S6 디자인 시안 확정(§8.2) → 블로커 해소. 다음은 S6**
-> **브랜치: `main` 하나 (`6c7888e`) · feat/* 병합·삭제 · ⚠️ `public/` 배경 후보 PNG 4장 + 루트 `poomang-q.png` 미커밋**
+> **브랜치: `main` 하나 · feat/* 병합·삭제 · 워킹트리 깨끗 · origin 동기화**
 
 ## 🎯 지금 어디까지 왔나
 - ✅ **설계 확정** (`newbeez-back/docs/`) — 15팀 좌표·문항·매칭 알고리즘

@@ -2,22 +2,10 @@
 
 import { useEffect } from "react";
 import { QUESTIONS } from "@/lib/questions";
-import type { Pole } from "@/lib/questions";
-import type { ChoiceIndex } from "@/lib/types";
+import BipolarScale from "./BipolarScale";
 import { encodeAnswerCode } from "@/lib/answer-code";
 import { matchTeam } from "@/lib/scoring";
 import { toMatchInput, useQuizStore } from "../_store";
-
-type ScaleOption = { choice: ChoiceIndex; label: string; detail?: string };
-
-function scaleOptions(negative: Pole, positive: Pole): ScaleOption[] {
-  return [
-    { choice: 0, label: negative.headline, detail: negative.detail },
-    { choice: 1, label: `약간 ${negative.word}` },
-    { choice: 2, label: `약간 ${positive.word}` },
-    { choice: 3, label: positive.headline, detail: positive.detail },
-  ];
-}
 
 export default function QuizPlay() {
   const index = useQuizStore((s) => s.index);
@@ -94,56 +82,43 @@ export default function QuizPlay() {
   const question = QUESTIONS[index];
 
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-8">
+    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-4">
       <p className="text-sm text-gray-500">
         {index + 1} / {QUESTIONS.length}
       </p>
       <h1 className="mt-3 text-xl font-bold">{question.prompt}</h1>
-      <div className="mt-8 flex flex-col gap-3">
-        {question.kind === "league"
-          ? question.options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={league === option.value}
-                onClick={() => {
-                  setLeague(option.value);
-                  goNext();
-                }}
-                className={`rounded-xl border p-4 text-left ${league === option.value ? "border-gray-900 bg-gray-50" : "border-gray-300"}`}
-              >
-                {option.label}
-              </button>
-            ))
-          : scaleOptions(question.negative, question.positive).map((option) => (
-              <button
-                key={option.choice}
-                type="button"
-                aria-pressed={choices[question.id] === option.choice}
-                onClick={() => {
-                  setChoice(question.id, option.choice);
-                  goNext();
-                }}
-                className={`rounded-xl border p-4 text-left ${
-                  choices[question.id] === option.choice
-                    ? "border-gray-900 bg-gray-50"
-                    : "border-gray-300"
-                }`}
-              >
-                <span className="font-semibold">{option.label}</span>
-                {option.detail && (
-                  <span className="mt-1 block text-sm text-gray-500">
-                    {option.detail}
-                  </span>
-                )}
-              </button>
-            ))}
-      </div>
+      {question.kind === "league" ? (
+        <div className="mt-8 flex flex-col gap-3">
+          {question.options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                setLeague(option.value);
+                goNext();
+              }}
+              className={`rounded-xl border p-4 text-left ${league === option.value ? "border-gray-900 bg-gray-50" : "border-gray-300"}`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <BipolarScale
+          negative={question.negative}
+          positive={question.positive}
+          selected={choices[question.id]}
+          onSelect={(choice) => {
+            setChoice(question.id, choice);
+            goNext();
+          }}
+        />
+      )}
       {index > 0 && (
         <button
           type="button"
           onClick={goBack}
-          className="mt-6 self-start text-sm text-gray-400"
+          className="mt-3 self-start text-sm text-gray-400"
         >
           ← 이전
         </button>

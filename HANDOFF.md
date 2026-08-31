@@ -1,202 +1,158 @@
 # HANDOFF — 진행 상황 & 다음 할 일
 
 > 세션 시작 시 이 파일을 먼저 읽고 이어서 작업.
-> **durable 설계(좌표·문항·알고리즘) = `newbeez-back/docs/` 가 source of truth — 여기에 중복하지 말 것.**
-> **시스템 설계(라우팅·렌더링·스키마·API·MVP 경계) = [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 2026-08-11 신설, 아래 요약보다 우선.
-> **마지막 업데이트: 2026-08-31 — S6-a 완료 + 실기기 피드백 반영 + 🚀 배포됨(`a425deb`). 다음은 S6-b(Q1 카드 + 진행바)**
-> **브랜치: `main` 하나 · feat/* 병합·삭제 · origin 동기화 · 워킹트리 깨끗**
-> **🌐 배포: https://www.newbeez.kr (Vercel · `main` 푸시하면 자동 배포)**
+>
+> **이 파일은 "상태 · 다음 할 일 · 함정"만 담는다.** 확정된 설계와 그 근거는 아래로 미루고 여기에 중복하지 않는다.
+> - 시스템 설계(라우팅·렌더링·스키마·API·UI 방침) → **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
+> - 제품 설계(15팀 좌표·9문항·매칭 알고리즘) → **`newbeez-back/docs/`**
+> - MVP 이후 기능 → [docs/FUTURE.md](docs/FUTURE.md)
+> - 작업 규칙(역할·커밋·브랜치) → [CLAUDE.md](CLAUDE.md)
 
-## 🎯 지금 어디까지 왔나
-- ✅ **설계 확정** (`newbeez-back/docs/`) — 15팀 좌표·문항·매칭 알고리즘
-- ✅ **시스템 설계 확정** (`docs/ARCHITECTURE.md`) — 채점=프론트 순수함수 / 결과=ISR `/football/result/[slug]?a=<9자리>` / 백엔드=표시 데이터·참여 로그·댓글 / **MVP 경계 확정**
-- ✅ **인물 큐레이션** (`docs/club-people-2026-08.md`) — 15팀 감독·스타·레전드 45건, 웹조사 + 적대적 검증
-- ✅ **한국어 표기 통일** — 팀명 정식 표기(`lib/clubs.ts` 7곳 수정), 인명 7건 확정
-- ✅ **폰트·테마 정리** — Pretendard 서브셋 400/600/700(806KB) · Geist 제거 · 다크모드 제거(라이트 고정)
-- ✅ **척도 UI 확정** — 세로축 4점 + 전점 라벨 (ARCHITECTURE §8.1). 디자인 시안 요청 단계
-- ✅ **호스팅 조사 완료** — 1순위 OCI Always Free 서울. **결정은 보류**(MVP에 불필요, 단 A1 확보가 복불복이라 미리 시도 권장)
-- ✅ **답코드 모듈** (`lib/answer-code.ts`) — 답 ⇄ 9자리 문자열. 왕복 196,608건 + 계약 가드 3종 감사 통과
-- ✅ **문서 분리** — `ARCHITECTURE.md`(423줄, 지금 만드는 것) / `FUTURE.md`(159줄, MVP 이후)
-- ✅ **인트로 완성** (`/football/quiz`) — OG·헤더·CTA·**공유 3버튼**·참여자 수 자리. 남은 건 **배포 후 카카오 실검증**뿐. ~~CTA 404~~ **해소됨(S5)**
-- ✅ **S5 진행 화면 완성** (`/football/quiz/play`) — 스토어·라우트·9문항·완료 패널. **채점 전 구간 수동 검증됨**
-- ✅ **S6-a 양극 척도 완성** — Q2~Q9가 시안 1a(축선+원 4개)로 교체됨. **375×553 스크롤 없음 실측**
-- ✅ **S1 채점 코어 완성** (6파일, tsc 통과 + 감사 통과, 커밋·푸시 완료)
-  - `lib/types.ts` — 공용 타입 (도메인별 정리)
-  - `lib/clubs.ts` — 15팀 좌표·리그·라이벌 (colorCode 제거됨)
-  - `lib/scoring-config.ts` — 배점표·`AXIS_SCALE`·`COS_BAND`
-  - `lib/questions.ts` — **9문항**(Q1 리그 + Q2~Q9 성향) 판별 유니온 + `QuestionId`
-  - `lib/scoring.ts` — `matchTeam` (코사인 방향 + 밴드 거리 타이브레이크)
-  - `scripts/audit.ts` — 65,536 전수 감사, **`pnpm quiz:audit`** (tsx 설치됨)
+**마지막 업데이트: 2026-08-31** · 브랜치 `main` 하나 · origin 동기화 · 워킹트리 깨끗
+**🌐 배포: https://www.newbeez.kr** (Vercel · `main` 푸시 → 자동 배포)
 
-## 🗺️ 슬라이스 로드맵 (1 슬라이스 = 1 브랜치, `/work`로 진행)
-- ✅ **S1 quiz-core** (완료 · `feat/quiz-core`, `4e9f3ec` 푸시)
-  - types · clubs · scoring-config · questions · scoring · audit
-  - **DoD 충족**: `pnpm quiz:audit` 통과 — 굶는 팀 0 · EPL 2.4·ETC 2.7·**ALL 4.4배** · **균등+중앙편향 둘 다 통과**
-- ⬜ **S1.5 coord-spread** ← 선택: 좌표 방향 분산으로 **ALL 4.4배 → ~2.25배**. 부호·정체성 보존, 감사 통과까지만
-- ✅ **S2 quiz-intro** (완료 · `47952a6` → main 병합): `/football/quiz` 인트로 + 히어로 이미지
-- ✅ **S2.5 answer-code** (완료 · `587b4d2`): `lib/answer-code.ts` + `scripts/audit-answer-code.ts`
-- ✅ **S2.7 intro-og** (완료 · `bafe409`): OG 이미지(1200×634·138KB)+alt · 로고 헤더(#f2fafe) · CTA 368×72(방구석연구소 실측과 동일) · 히어로 4px 크롭(#b0cd2a 이음매) · sr-only h1 · 서비스명 "팀 성향 테스트" 통일
-- ✅ **S2.8 intro-social** (완료 · `7b51002` 병합): 인트로 공유 3버튼 + 참여자 수 자리
-  - `components/ShareButtons.tsx` — 카카오·X·링크복사 56px 원형, 순서는 레퍼런스 실측(시작하기 → 참여자수 → 공유). **공용 `components/`에 둔 이유는 결과 화면에서도 쓰기 때문**(ARCHITECTURE §4.2)
-  - 링크 복사 = `navigator.clipboard` + **2초 토스트**(모달 아님 — 푸망도 `copied_toast`, 방구석연구소만 모달) · X = `URLSearchParams` + 팝업 550×420 + `noopener` · 카카오 = `next/script` lazyOnload + SRI + `Share.sendScrap({requestUrl})`
-  - **키 없으면 카카오 버튼·SDK를 아예 렌더 안 함** — 저장소를 받은 사람이 `.env.local` 없이 실행해도 화면 정상
-  - `app/football/quiz/_components/ParticipantCount.tsx` — **인트로 전용이라 라우트에 콜로케이션**. 지금은 `return null`이고 구현 규칙은 주석에 보존(F6에서 채움)
-  - ⚠️ **배포 후 실측할 것**: 안드로이드 **카톡 인앱 브라우저(WebView) 일부 기기**에서 `navigator.clipboard`가 막힐 수 있음(호스트 앱이 `clipboard-write` 권한을 안 열면 `NotAllowedError`). 안드로이드 크롬은 정상이고, 카카오·X 버튼은 무관 → 증상은 **"링크 복사 버튼만 무반응"**
-    - 지금은 localhost라 **재현 자체가 불가**. HTTPS 배포 후 본인 폰 카톡에서 눌러 10초면 판정
-    - 실패가 확인되면 그때 `document.execCommand("copy")` 폴백 추가(deprecated이지만 인앱에서 동작). **확인 전에 미리 넣지 말 것** — 검증할 환경이 없어 동작을 보장할 수 없음
-  - 컴포넌트 배치 규칙 확정: **한 라우트만 쓰면 그 라우트 `_components/`, 두 곳 이상이면 최상위 `components/`**. Next 문서는 이 주제에 unopinionated
-- ⬜ **S3 clubs-data** — TheSportsDB 1회성 프리페치 → `data/clubs.source.json` + **배지 15장 다운로드**(URL 링크 금지) + 팀 표시 데이터
-- 🟡 **S4 landing** — **배포는 완료(2026-08-31), 랜딩 화면은 미완**
-  - ✅ **Vercel 배포 + 도메인 연결** — `www.newbeez.kr` (호스팅케이알 구매 · apex는 www로 308)
-    - `main` 푸시 → 자동 배포. 환경변수 `NEXT_PUBLIC_KAKAO_JS_KEY` 는 **Vercel 대시보드에** 등록해야 함(없으면 카카오 버튼이 아예 렌더 안 됨 — 설계상 의도)
-    - ⚠️ **해시 붙은 배포 URL**(`...-bwkc6citg-...vercel.app`)은 **Vercel 로그인을 요구**한다. 폰 테스트는 반드시 `www.newbeez.kr` 로
-  - ✅ **`/` · `/football` → `/football/quiz` 임시 리다이렉트** (`next.config.ts`)
-    - 홈·카테고리 화면이 없어 "준비 중"만 뜨던 막다른 길 해소
-    - **307(`permanent: false`)** — 308은 브라우저가 영구 캐시해서 나중에 홈을 만들어도 계속 튕겨 보낸다
-    - `source: "/football"` 은 **정확 매칭**이라 `/football/quiz` 이하는 영향 없음 (하위까지 잡으면 무한 리다이렉트 사고)
-    - **홈·카테고리 화면이 생기면 이 5줄을 삭제**
-  - ✅ **`noindex` 는 넣지 않기로 결정** — 리다이렉트 덕에 미완성 페이지가 렌더링되지 않고, 색인 대상으로 남는 `/football/quiz` 는 **완성된 페이지**라 색인되는 게 이득. 넣으면 **나중에 빼는 걸 잊을 위험**이 더 크다
-  - ⬜ 남은 것: `/football` 실제 랜딩(히어로 + 퀴즈 버튼) + 출처 푸터. ~~15팀 그리드~~ 제외
-- ✅ **S5 quiz-store** (완료 · `6c7888e` → main 병합): 스토어 + `/football/quiz/play` + 완료 패널
-  - `_store.ts` — `index`·`league`·`choices` + 액션 5개 + `toMatchInput` 검문소
-  - `page.tsx` 서버(metadata·noindex) / `_components/QuizPlay.tsx` 클라이언트(화면)
-  - **인트로 CTA의 404 해소.** 9문항 자동 진행 · `← 이전` · 선택 표시
-  - **DoD 충족 — 수동 검증** (EPL 기준)
-    - 전부 맨 위 → `000000000` · 4축 **−5** · **아스널** (코사인 0.7702, 2위와 0.77 차)
-    - 전부 맨 아래 → `033333333` · 4축 **+5** · **맨유** (맨시티보다 방향이 맞음)
-    - 양극단이 정확히 ±5 → `AXIS_SCALE = 1.25`("범위 ±5 복원")가 의도대로 동작
-    - **크기가 아니라 방향으로 고른다**는 코사인 설계가 화면에서 확인됨
-  - ⚠️ **완료 패널은 임시** — S8에서 `router.replace("/football/result/…")` 한 줄로 통째 교체
-- 🟡 **S6 quiz-scale** — **a 완료 / b·c 남음**
-  - **사양은 ARCHITECTURE §8.2** (2026-08-30 실측으로 수치 갱신됨)
-  - 시안 출처: **`바탕화면/레퍼런스/Quiz screen design for soccer personality test.pdf`** — 이 프로젝트 전용 시안 10개. **1페이지짜리라 텍스트만 추출되고 이미지는 안 보인다** → `pypdf`로 XObject를 꺼내 PNG 변환(PIL 없이 zlib+struct로 가능). **X24가 채택안(1a·1b) 4폰 시트**
-  - **1a(미니멀 축)** = Q2~Q9 · **1b(카드 중심)** = Q1. 2a·2b는 전점 라벨이라 §8.1 되돌림으로 탈락, 3a~3c는 가로축이라 탈락
-  - **오탭 방지가 디자인 요구사항** — 자동 진행이라 잘못 누르면 즉시 확정
-  - ✅ **S6-a bipolar-scale** (완료 · `75ab643` → `975b9d9` 병합)
-    - `_components/BipolarScale.tsx` — `PoleText`(극 문구) + `ScaleDot`(원 버튼) + 축선
-    - `QuizPlay.tsx` 의 임시 카드 4장·`scaleOptions()` 제거 → `<BipolarScale />` 한 줄
-    - **DoD 충족** — playwright 실측: 원 48/32/32/48 · 간격 24 균일 · **375×553 스크롤 없음(최소 544px)** · 선택 시 `#2c2735` + `#fbe3a5` 4px 링 · `← 이전` 복원 정상
-  - ⬜ **S6-b** ← **다음** · `_components/LeagueChoices.tsx`(Q1 카드) + `_components/QuizProgress.tsx`(진행바)
-    - 확인할 것: 9문항 완주 · 색·타이포 확정 · **Q1도 375×553에 들어가는가**(카드 3장이 척도보다 높다)
-    - 진행바 = 9칸 **세그먼트 표시 전용** + `N / 9` 텍스트 병기
-    - ~~칸을 눌러 문항 점프~~ **기각** — 375px에서 한 칸 ≈35px로 터치 권장치 미달이라 **오탭 복구 장치가 오탭을 유발**. 되돌리기는 `← 이전` 한 칸으로 충분
-    - **진행바가 S6-b인 이유**: **S6 = 보이는 것 / S7 = 움직이는 것** 경계 정리
-  - ⬜ **S6-c** · **배경 재검토** (§8.3) — 이제 1a가 실제로 그려졌으니 **그 위에서** 4장 비교. 채택 시 WebP 변환 후 `public/` 복귀
-  - `QuizPlay.tsx` 는 화면을 직접 그리지 않고 **셋을 조립하는 컨테이너로 축소**된다 (a에서 절반 진행됨)
-- ⬜ **S7 quiz-flow** — **움직이는 것만** (보이는 것은 전부 S6)
-  - **자동진행 지연** — 지금은 즉시. 선택 표시를 볼 틈을 줄지(200~400ms) 결정. 레퍼런스 실측 권장
-  - **완료 → 결과 이동** — `router.replace("/football/result/[slug]?a=…")`. S8과 맞물림
-  - ~~진행바~~ · ~~뒤로 버튼~~ 은 **S6·S5에서 이미 함**
-  - **진입 가드**: 새로고침·주소 직접 입력이면 인트로로 `router.replace` (레퍼런스 실측 — 푸망·방구석연구소 둘 다 그렇게 동작)
-    - 구현: `_store.ts`에 모듈 변수 `let started = false` + 인트로 CTA를 클라이언트 컴포넌트로 바꿔 클릭 시 `markStarted()`. **모듈 메모리는 앱 내부 이동에는 살아남고 새로고침에는 사라지므로** 이 둘을 구분할 수 있음
-    - ⚠️ 정적 HTML에 Q1이 이미 그려져 있어 **리다이렉트 전 한 프레임 깜빡임**이 생김. 없애려면 추가 처리 필요
-- ⬜ **S8 result** — 한국어 카피 15팀 + `/football/result/[slug]` + 답코드 **9자리**(리그1+성향8) + 4축 다이아몬드
-  - ⚠️ **파싱 검증 필수** — `matchTeam` 호출 전에 막지 않으면 조작 URL로 페이지가 죽는다 (ARCHITECTURE §3)
-- ⬜ **S9 share** — OG 태그 → 카카오 SDK(도메인 확정 후) · **S10 og-image**(동적)
-- ⬜ **F6 백엔드** — 최소(`POST /participants`)부터. 호스팅 1순위 **OCI Always Free 서울**
-- ⬜ 이후 — 익명 댓글(결과별) → `/football` 허브 오픈(꿀팁·팀 순위) → 카카오 로그인 + 입문팀 UGC
+---
 
-> **MVP 경계는 `docs/ARCHITECTURE.md` §9가 기준.** 위 슬라이스는 그 순서를 잘게 쪼갠 것.
+## 🗺️ 슬라이스 로드맵
 
-## 📌 핵심 포인터
+1 슬라이스 = 1 브랜치, `/work` 로 진행. **MVP 경계는 ARCHITECTURE §9.**
 
-### 🟡 카카오 공유 — **이제 검증 가능** (배포 완료 · 2026-08-21 조사, 재조사 비쌈)
+| | 슬라이스 | 상태 |
+|---|---|---|
+| **S1** | quiz-core — `lib/` 6파일 + 전수 감사 | ✅ `4e9f3ec` |
+| S1.5 | coord-spread — 좌표 분산으로 ALL 4.4배 → ~2.25배 | ⬜ 선택 |
+| **S2** | quiz-intro — `/football/quiz` | ✅ `47952a6` |
+| **S2.5** | answer-code — 9자리 답코드 + 감사 | ✅ `587b4d2` |
+| **S2.7** | intro-og — OG 이미지·헤더·CTA | ✅ `bafe409` |
+| **S2.8** | intro-social — 공유 3버튼 + 참여자 수 자리 | ✅ `7b51002` |
+| S3 | clubs-data — TheSportsDB 프리페치 + 배지 15장 | ⬜ |
+| **S4** | landing + 배포 | 🟡 **배포만 완료** |
+| **S5** | quiz-store — 스토어 + `/play` + 완료 패널 | ✅ `6c7888e` |
+| **S6** | quiz-scale — 퀴즈 화면 디자인 | 🟡 **a 완료** |
+| S7 | quiz-flow — 움직이는 것만 | ⬜ |
+| S8 | result — 결과 화면 + 4축 다이아몬드 | ⬜ |
+| S9·S10 | share — 카카오 SDK · 동적 OG 이미지 | ⬜ |
+| F6 | 백엔드 — `POST /participants` 부터 | ⬜ |
 
-> **2026-08-31 현재 남은 일**: 콘솔에 `https://www.newbeez.kr` 를 **두 곳 등록** + **기본 도메인을 실도메인으로 변경**.
-> 🚨 **기본 도메인이 `localhost` 로 남아 있으면 공유된 카톡 링크가 `http://localhost/` 로 나가서 아무도 못 연다.** 아래 "로컬에서는 링크가 등록 도메인 루트로 치환된다" 실측이 그 증상이다. `localhost` 는 목록에서 지우지 말되 **기본으로 두지 말 것**.
-> (카카오 공식 FAQ 에 *기본 도메인*의 정의는 문서화되어 있지 않다 — 위 실측이 유일한 근거)
-- **콘솔이 2025-12-03에 개편됨.** 검색으로 나오는 한국어 튜토리얼은 **전부 그 이전 글**이라 없어진 메뉴(`[플랫폼] > [Web] > 사이트 도메인`)를 안내한다. **공식 문서와 2026년 데브톡만 신뢰할 것**
-- **도메인은 여전히 두 곳**에 각각 등록해야 하며, 개편으로 위치가 갈렸다. 카카오 FAQ가 이 혼동을 "자주하는 실수 ★★★★★"로 지목
+이후: 익명 댓글 → `/football` 허브 오픈 → 카카오 로그인 + UGC
+
+### 🟡 S4 landing — 배포는 됐고 랜딩 화면이 없다
+
+- ✅ Vercel + `www.newbeez.kr` (호스팅케이알 구매 · apex → www 308)
+- ✅ `/` · `/football` → `/football/quiz` **임시 리다이렉트** (`next.config.ts`). **홈·카테고리 화면이 생기면 이 5줄 삭제**
+- ✅ `noindex` 는 **넣지 않기로** — 리다이렉트 덕에 미완성 페이지가 렌더링되지 않고, 색인 대상으로 남는 인트로는 완성된 페이지다. 넣으면 **나중에 빼는 걸 잊을 위험**이 더 크다
+- ⬜ 남은 것: `/football` 실제 랜딩(히어로 + 퀴즈 버튼) + 출처 푸터. ~~15팀 그리드~~ 제외
+
+### 🟡 S6 quiz-scale — a 완료 / b·c 남음
+
+**사양은 ARCHITECTURE §8.1·§8.2.** 시안은 `바탕화면/레퍼런스/…design….pdf` 의 **1a**(Q2~Q9) · **1b**(Q1).
+
+- ✅ **S6-a bipolar-scale** — `_components/BipolarScale.tsx`. 배포됨
+- ⬜ **S6-b** ← **다음** · `LeagueChoices.tsx`(Q1 카드) + `QuizProgress.tsx`(진행바)
+  - 진행바 = 9칸 **세그먼트 표시 전용** + `N / 9` 병기
+  - ~~칸을 눌러 문항 점프~~ **기각** — 375px 에서 한 칸 ≈35px 로 터치 권장치 미달. **오탭 복구 장치가 오탭을 유발**한다
+  - ⚠️ **세로 예산을 반드시 다시 잴 것** — 아래 "SE 여유 9px" 참고. Q1 카드 3장이 척도보다 높다
+- ⬜ **S6-c** · 배경 재검토(§8.3) — 이제 1a 가 실제로 그려졌으니 **그 위에서** 4장 비교
+
+### ⬜ S7 quiz-flow — 움직이는 것만
+
+- **자동진행 지연** — 지금은 즉시. 선택 표시를 볼 틈(200~400ms)을 줄지 결정
+- **완료 → 결과 이동** — `router.replace("/football/result/[slug]?a=…")`. S8 과 맞물림
+- **진입 가드** — 새로고침·주소 직접 입력이면 인트로로 (푸망·방구석연구소 둘 다 그렇게 동작)
+  - `_store.ts` 에 모듈 변수 `let started = false` + 인트로 CTA 를 클라이언트로 바꿔 클릭 시 `markStarted()`. **모듈 메모리는 앱 내부 이동에는 살아남고 새로고침에는 사라진다**
+  - ⚠️ 정적 HTML 에 Q1 이 이미 그려져 있어 **리다이렉트 전 한 프레임 깜빡임**이 생긴다
+
+### ⬜ S8 result
+
+⚠️ **파싱 검증 필수** — `decodeAnswerCode` 가 `null` 이면 `matchTeam` 을 아예 부르지 않는다. 안 막으면 조작 URL 로 페이지가 죽는다 (ARCHITECTURE §3.2).
+
+---
+
+## 🔴 지금 열려 있는 위험
+
+| | 무엇 | 어떻게 판정 |
+|---|---|---|
+| **오탭** | 안쪽 원 36px(짧은 화면 32px)이 터치 권장치 44px 미달. **자동 진행이라 오탭이 즉시 확정** | 폰에서 평소 속도로 눌러보기 → 잦으면 `p-1.5` 투명 여백으로 44px 확보(원 크기·간격은 유지 가능) |
+| **SE 여유 9px** | 축 영역 최소 232px 인데 현재 241px → **헤더가 10px만 커져도 스크롤** | S6-b 에서 playwright 재측정. 진행바가 `2 / 9` 줄(20px)을 대체하므로 순증가는 그보다 작다 |
+| **클립보드** | 안드로이드 **카톡 인앱 브라우저** 일부 기기에서 `navigator.clipboard` 차단 가능(`NotAllowedError`). 증상은 **"링크 복사만 무반응"** | 폰 카톡에서 링크 열어 눌러보기 → 실패 시 `document.execCommand("copy")` 폴백. **확인 전에 미리 넣지 말 것** |
+| **카카오 공유** | 콘솔 등록이 아직 안 끝남 | 아래 절 |
+
+---
+
+## 📌 함정 모음 (경험으로 알게 된 것)
+
+### 🟡 카카오 공유 (2026-08-21 조사 · 재조사 비쌈)
+
+**남은 일: 콘솔에 `https://www.newbeez.kr` 두 곳 등록 + 기본 도메인을 실도메인으로 변경.**
+
+- 🚨 **기본 도메인이 `localhost` 면 공유된 카톡 링크가 `http://localhost/` 로 나가서 아무도 못 연다.** 실측: PC 카톡 `http://localhost:3000/`, 모바일 `http://localhost/`. `localhost` 는 목록에서 지우지 말되 **기본으로 두지 말 것**
+  - 카카오 공식 FAQ 에 *기본 도메인*의 정의는 문서화돼 있지 않다 — 위 실측이 유일한 근거
+- **콘솔이 2025-12-03에 개편됨.** 검색에 나오는 한국어 튜토리얼은 **전부 그 이전 글**이라 없어진 메뉴를 안내한다. **공식 문서와 2026년 데브톡만 신뢰할 것**
+- **도메인은 두 곳**에 각각 등록하며 개편으로 위치가 갈렸다. 카카오 FAQ 가 "자주하는 실수 ★★★★★"로 지목
+
   | 어디에 | 무엇을 막나 | 실패 코드 |
   |---|---|---|
   | `[앱] > [플랫폼 키] > [JavaScript 키] > [JavaScript SDK 도메인]` | 앱 키 도용 | **4019** |
   | `[앱] > [제품 링크 관리] > [웹 도메인]` | 링크 위·변조(피싱) | **4002** |
-- **로컬에서는 링크가 항상 등록 도메인 루트로 치환된다.** `localhost`는 카카오 스크랩 서버가 도달 불가 + 포트 3000이 허용 범위(80·443) 밖 → **콘솔을 어떻게 만져도 안 없어짐**. 실측: PC 카톡 `http://localhost:3000/`, 모바일 `http://localhost/`
-- **로컬에서 검증되는 범위** — SDK 로드·SRI·`init`·도메인 등록 2곳·공유창 열림까지. 미리보기 카드와 전체 경로 링크는 배포 후
-- **배포 시 체크리스트**
-  1. 실 origin(`https://www.newbeez.kr`)을 **두 곳 모두**에 등록 (localhost는 지우지 말 것)
-  2. **웹 도메인의 기본 도메인을 실도메인으로** ← 안 바꾸면 링크가 localhost로 치환됨
-  3. URL에 `:443`을 **쓰지 말 것** — 등록 시 정규화로 사라져서 오히려 매칭 실패
-  4. ✅ **`metadataBase` 교체 완료** ([app/layout.tsx](app/layout.tsx) → `https://www.newbeez.kr`). 안 바꾸면 `og:url`이 localhost로 나가고 **카카오가 그쪽을 따라간다**
-  5. 배포 후 OG 태그는 **`curl`로 확인** (개발자도구는 응답과 다를 수 있음)
-     `curl -s https://www.newbeez.kr/football/quiz | grep -o 'og:[^>]*'`
-  6. 새 도메인 등록은 **즉시 반영되지 않음** — 잠시 후 재시도
-  7. `NEXT_PUBLIC_KAKAO_JS_KEY` 가 **Vercel 환경변수**에 있는지 확인. 폰에서 **노란 버튼이 안 보이면 안 들어간 것**
+
 - **증상별 원인**
+
   | 증상 | 원인 |
   |---|---|
-  | 공유창이 안 뜸 | JavaScript SDK 도메인 미등록 (**4019**) |
-  | 공유창은 뜨는데 전송 실패 | 웹 도메인 미등록 (**4002**) |
-  | 카드는 뜨는데 내용이 낡음 | **스크랩 캐시** — 카카오가 예전 OG를 들고 있음 |
+  | 공유창이 안 뜸 | JavaScript SDK 도메인 미등록 (4019) |
+  | 공유창은 뜨는데 전송 실패 | 웹 도메인 미등록 (4002) |
+  | 카드는 뜨는데 내용이 낡음 | **스크랩 캐시** — 카카오가 예전 OG 를 들고 있음 |
   | 링크가 `localhost` 로 감 | **기본 도메인이 아직 localhost** |
-  | 노란 버튼 자체가 없음 | Vercel 환경변수 미등록 |
-- **SDK 버전은 찍어보지 말고** [공식 다운로드 페이지](https://developers.kakao.com/docs/ko/javascript/download)에서 확인. 버전과 `integrity`는 **반드시 짝**(하나만 바꾸면 스크립트가 조용히 차단됨)
-- **웹훅은 안 씀** — 서버가 있어야 하고 `serverCallbackArgs`를 함께 넘겨야 발동. F6 이후 선택
-- 문서: [공유 FAQ](https://developers.kakao.com/docs/ko/kakaotalk-share/faq) · [JS 가이드](https://developers.kakao.com/docs/ko/kakaotalk-share/js-link) · [앱 키 마이그레이션](https://developers.kakao.com/docs/ko/getting-started/app-key-migration) · [데브톡 공유 FAQ](https://devtalk.kakao.com/t/topic/149604)
+  | **노란 버튼 자체가 없음** | `NEXT_PUBLIC_KAKAO_JS_KEY` 가 Vercel 환경변수에 없음(설계상 키 없으면 렌더 안 함) |
 
-### 🔵 퀴즈 진행 화면 — S5에서 확정된 것 (2026-08-25)
-- **파일 배치**: `play/_store.ts`(스토어) · `play/page.tsx`(서버, metadata+noindex) · `play/_components/QuizPlay.tsx`(클라이언트, 화면)
-  - **`"use client"` 파일에서는 `metadata`를 못 내보낸다** → 라우트/메타데이터와 화면을 반드시 분리
-  - `robots: { index: false }` — 진행 화면 색인 차단. **유입 착지점은 인트로 하나로** (§4.1)
-- **한 라우트 + 상태 교체**(문항마다 URL을 두지 않음) — 답이 URL에 없어서 `/play/5`를 새로고침하면 "5번 문항인데 답 0개"라는 **모순 상태**가 생긴다
-- **`index`를 스토어에 둔 이유** — 답과 위치가 항상 함께 움직이므로. 컴포넌트 `useState`로 쪼개면 S7 자동진행에서 두 갱신 시스템이 한 핸들러에 섞인다
-- **자동 진행** — 선택 = 답 저장 + 다음 문항. **"다음" 버튼 없음**(탭 18회 → 9회)
-- **`← 이전`(한 칸)과 선택된 답 표시는 넣음** — 자동 진행이라 오탭을 되돌릴 수단이 없으면 **잘못된 답으로 나온 결과**가 공유되고, 그건 이 서비스의 목표를 직접 해친다. 시각적 위계는 낮춤(`text-gray-400`)
-- ~~완료 화면에서 이전~~ — 결과는 **별도 라우트 + `reset`으로 답이 비워짐**. 다시하기로 처음부터가 맞음
-- **`reset`은 언마운트 정리로** (`useEffect(() => reset, [reset])`) — 들어올 때 초기화하면 지난 완료 화면이 한 프레임 비친다. 새로고침은 메모리째 사라지므로 이 장치와 무관
-- ⏸ **새로고침 시 답 유실은 "미룬 것"** — `persist` 미들웨어(sessionStorage)로 해결 가능하나 하이드레이션 깜빡임·낡은 답 복원 방어가 따라온다. 스토어 모양이 이미 저장하기 좋아 **나중에 감싸기만 하면 되고 화면 코드는 안 바뀜**. 배포 후 완주율 보고 결정
-- ~~📝 Q7·Q8의 `word`가 어색~~ **해소됨(S6-a)** — `Pole.word` 자체가 삭제됨
-- ⚠️ **Tailwind 캐시 함정** — 새 폴더/파일을 여러 개 만든 뒤 **새 클래스만 스타일이 안 먹는** 일이 있었다. Tailwind의 의존은 `import` 그래프 밖(파일 감시)이라 놓칠 수 있음. **`rm -rf .next && pnpm dev`** 로 해결. 서버만 재시작하면 `.next` 캐시가 그대로 재사용돼 안 고쳐짐
-  - 진단 순서: DevTools로 ① 클래스가 붙었나 → ② Styles에 그 CSS 규칙이 있나 → ③ 캐시 삭제. `aria-pressed`가 **스타일과 무관하게 로직을 확인시켜 줘서** 범위를 빨리 좁혔다
+- URL 에 `:443` 을 **쓰지 말 것** — 등록 시 정규화로 사라져 오히려 매칭 실패
+- 등록은 **즉시 반영되지 않음** — 잠시 후 재시도
+- OG 태그는 `curl` 로 확인 (개발자도구는 응답과 다를 수 있음)
+  `curl -s https://www.newbeez.kr/football/quiz | grep -o 'og:[^>]*'`
+- **SDK 버전은 찍어보지 말고** [공식 다운로드 페이지](https://developers.kakao.com/docs/ko/javascript/download)에서 확인. 버전과 `integrity` 는 **반드시 짝**(하나만 바꾸면 스크립트가 조용히 차단됨)
+- 웹훅은 안 씀 — 서버 + `serverCallbackArgs` 가 있어야 발동. F6 이후 선택
+- 문서: [공유 FAQ](https://developers.kakao.com/docs/ko/kakaotalk-share/faq) · [JS 가이드](https://developers.kakao.com/docs/ko/kakaotalk-share/js-link) · [데브톡](https://devtalk.kakao.com/t/topic/149604)
 
-### 🟢 S6-a 척도 화면 — 2026-08-30 확정된 것
+### 🚀 배포 (Vercel)
 
-- **파일**: `play/_components/BipolarScale.tsx` — 안에 `PoleText`(극 문구) · `ScaleDot`(원 1개) 두 개를 품고 둘 다 `export` 없음. **밖에서 쓰이면 파일 분리, 안에서만 쓰이면 같은 파일**
-- 🚨 **§8.2의 "안쪽↔안쪽 8px"은 시안 오독이었다 (폐기).** 실제로 그리면 두 원이 붙어 보인다. **간격은 24px 균일**이고, **"가운데 압축"은 간격이 아니라 원 크기가 만든다** — 중심 간 거리 64/56/64. §8.1의 "점 크기"와 "가운데 압축"은 별개 장치가 아니라 **같은 하나**였다
-- **클릭 영역 = 원 자체.** §8.2의 "행 전체 + 44px" 안은 채택 안 함. 안쪽 원 32px은 권장치 미달이며 **인지된 위험** — 실기기에서 오탭이 잦으면 `p-1.5` 투명 여백으로 44px 확보(원 크기·간격은 유지 가능)
-- **접근성 방침 확정 (§8.4)**: `aria-label`·`aria-pressed` 안 씀 → **`Pole.word` 17줄 삭제**. 시맨틱 태그는 유지
-  - `lib/questions.ts`(재작성 금지 파일)를 건드렸으므로 **`pnpm quiz:audit` 통과 확인함** — 숫자가 기준선과 일치(EPL 2.38·ETC 2.69·ALL 4.39·왕복 196,608건)
-- 🔴 **실기기 피드백으로 세로 배치를 다시 뒤집었다 (2026-08-31)** — 데스크톱 브라우저만 보고 판단하면 안 된다는 사례
-  - 증상: 390×844 실기기에서 **질문↔극 문구가 166px** 벌어지고 원이 작아 보임
-  - 원인: 바깥 컨테이너의 **`justify-center`** 가 남는 세로 328px 을 **덩어리 바깥**(질문 밑 + `← 이전` 위)으로 갈라 넣고 있었다
-  - 고침: `justify-center` 제거 → **축 영역이 `flex-1` 로 흡수**하고 `max-h-83`(332px)로 상한
-  - **축선을 `inset-y-0` 로 축 영역 끝까지** — 여백을 선이 채우면 "빈 곳"이 아니라 "긴 축"으로 읽힌다. 시안이 원 뭉치보다 훨씬 긴 선을 그린 이유
-  - 원 **48/32 → 56/36** (시안 실측 58/36 에 근접) · 중심 간격 70/60/70
-  - **`[@media(max-height:600px)]` 로 짧은 화면에선 48/32 자동 축소** — Tailwind 기본 `sm:`·`md:` 는 전부 **폭** 기준이라 못 쓴다. 문제는 좁은 게 아니라 **짧은** 것
-  - 🔑 **상한은 "축의 최대 길이"에 건다.** 화면 높이에서 헤더를 빼 역산하면(처음엔 `max-h-[476px]` 로 했다) 진행바·질문 배치가 바뀔 때마다 틀어진다
-- **세로 예산** (playwright 실측) — 390×844 / 375×553 **둘 다 스크롤 없음**
-  - ⚠️ **SE 여유는 9px뿐**이다. 축 영역 최소값 232px 인데 현재 241px → **헤더가 10px만 커져도 스크롤**. S6-b 에서 반드시 재측정
-  - 다만 진행바가 지금의 `2 / 9` 텍스트 줄(20px)을 **대체**하므로 순증가는 그보다 작다
-  - 깎을 수 있는 여백: `main` `py-4` · 척도 `mt-4`·`gap-6` · `← 이전` `mt-3`. **원 크기·간격·글자 크기는 마지막에**
-- **축선 구현** — `absolute`(배치에서 빠짐) + 컨테이너 `relative`(좌표 기준) + 원 `relative`(같은 층으로 올려 순서 싸움) + 원 `bg-white`(실제로 가림). **넷 중 하나만 빠져도 선이 원을 관통한다.** `z-index`는 안 씀(DOM 순서로 충분)
-- 🔧 **playwright MCP로 실측·검증했다** — 화면을 눈으로만 보지 말 것. `getBoundingClientRect()`로 간격을, `scrollHeight > innerHeight`로 넘침을 재고, 라이브 DOM에 스타일을 주입해 **코드 수정 전에 비교**했다. 이 방식이 8px 오독을 잡았다
+- ⚠️ **해시 붙은 배포 URL**(`...-bwkc6citg-...vercel.app`)은 **Vercel 로그인을 요구**한다. 폰 테스트는 반드시 `www.newbeez.kr` 로
+- 리다이렉트 `source: "/football"` 은 **정확 매칭** — 하위까지 잡으면 퀴즈가 자기 자신으로 무한 리다이렉트한다
+- 리다이렉트는 **307**(`permanent: false`). 308 은 브라우저가 영구 캐시해서 나중에 홈을 만들어도 계속 튕겨 보낸다
+- `next.config.ts` 변경은 **개발 서버 재시작 전까지 반영 안 됨**
+
+### 🔧 개발 중 함정
+
+- ⚠️ **Tailwind 캐시** — 새 폴더/파일을 여러 개 만든 뒤 **새 클래스만 스타일이 안 먹는** 일이 있었다. 의존이 `import` 그래프 밖(파일 감시)이라 놓칠 수 있음. **`rm -rf .next && pnpm dev`**. 서버만 재시작하면 안 고쳐진다
+  - 진단 순서: DevTools 로 ① 클래스가 붙었나 → ② Styles 에 그 CSS 규칙이 있나 → ③ 캐시 삭제
+- ⚠️ **Tailwind 오타는 조용히 무시된다** (`border-gray-300s`). 스타일이 안 먹으면 **오타부터** 의심
+- 🔧 **playwright MCP 로 실측할 것 — 눈으로만 보지 말 것.** `getBoundingClientRect()` 로 간격을, `scrollHeight > innerHeight` 로 넘침을 재고, **라이브 DOM 에 스타일을 주입해 코드 수정 전에 비교**한다
+  - 이 방식이 두 번 설계를 바꿨다: §8.2 의 "간격 8px" 오독, `justify-center` 가 실기기에서 166px 을 벌리던 문제
   - ⚠️ Next 개발 오버레이(`<nextjs-portal>`)가 클릭을 가로챈다 → `browser_evaluate` 로 `el.click()` 직접 호출
-  - ⚠️ 스크린샷 기본 경로가 **프로젝트 루트**다. 끝나면 지울 것 (`.playwright-mcp/`는 gitignore 됨)
+  - ⚠️ 스크린샷 기본 경로가 **프로젝트 루트**다. 끝나면 지울 것
+- 🚨 **데스크톱 브라우저만 보고 판단하지 말 것.** 375×667 DevTools 는 통과했지만 실기기 390×844 에서 레이아웃이 무너져 있었다. 원인은 화면이 **더 클 때** 남는 공간이 어디로 가느냐였다
 
-### 📁 레퍼런스 폴더 (`바탕화면/레퍼런스/`) — git에 없음, 잊지 말 것
+### 📁 레퍼런스 폴더 (`바탕화면/레퍼런스/`) — git 에 없음
+
 | 파일 | 내용 |
 |---|---|
-| **`Quiz screen design for soccer personality test.pdf`** | **이 프로젝트 전용 퀴즈 화면 시안 10개.** S6의 원본 |
-| `방구석연구소.html` + `_files/` | 홈 저장본. Next 앱이라 **퀴즈 화면 마크업은 없음**(JS 청크뿐) |
-| `푸망레퍼런스.html` + `_files/` | 빙수 테스트 상세 페이지 저장본. 역시 퀴즈 화면 없음 |
-| `추천퀴즈.jpeg` 등 | Duolingo·앱 UI 일반 영감 (퀴즈 전용 아님) |
+| **`Quiz screen design for soccer personality test.pdf`** | 이 프로젝트 전용 퀴즈 화면 시안 10개. **X24 가 채택안(1a·1b) 4폰 시트** |
+| `방구석연구소.html` · `푸망레퍼런스.html` | 저장본. **둘 다 퀴즈 진행 화면 마크업은 없다**(클라이언트 렌더) |
+| `배경후보/` | 일러스트 4종 PNG (S6-c 에서 재검토) |
 
-- 저장된 HTML로는 레퍼런스의 **퀴즈 진행 화면을 볼 수 없다**(클라이언트 렌더). 세부가 필요하면 **폰으로 직접 실측**하는 게 빠르다 — 이 방식이 지금까지 여러 번 설계를 바꿨다(CTA 368×72 · 공유 버튼 순서 · 앞뒤 이동 없음 · 새로고침→인트로)
-- `public/`에 배경 후보 PNG 4장(6.6MB, 미커밋) + 루트에 `poomang-q.png`. **정리 필요** — 쓸 것만 WebP로 변환해 남길 것
+- PDF 는 1페이지라 텍스트만 추출된다 → **`pypdf` 로 XObject 를 꺼내 PNG 변환**(PIL 없이 zlib+struct 로 가능)
+- 레퍼런스 세부가 필요하면 **폰으로 직접 실측**하는 게 빠르다 — 이 방식이 여러 번 설계를 바꿨다(CTA 368×72 · 공유 버튼 순서 · 앞뒤 이동 없음 · 새로고침→인트로)
 
-### 그 외
-- **설계 source = `newbeez-back/docs/`** (좌표·문항·알고리즘)
-- **매칭 = 코사인(방향)** — 근소동점 밴드(`COS_BAND`)는 **유클리드 거리**로 가름. (~~Q10 색 타이브레이크는 제거됨~~)
-- **Q10 색상 문항·`colorCode`·`Color` 제거됨** — 매칭에 미사용이고 마지막 질문 색 불일치(78.7%)로 신뢰 저해 → 삭제. 팀 색이 결과 카드에 필요하면 S7 프레젠테이션 층에서 다시 추가
-- **결과 = ISR `/football/result/[slug]?a=<9자리 답코드>`** — Q1 리그 1자리 + Q2~Q9 성향 8자리. Q1이 있어야 `matchTeam` 재실행으로 **slug 대조 검증**이 가능 (2026-08-11 변경, 상세는 ARCHITECTURE §3)
-- **데이터 3층**: `lib/clubs.ts`(좌표·**표시명 원본**·프론트) + `data/clubs.source.json`(오픈API 프리페치·S3) + **`team_results` DB**(배지·경기장·인물·카피)
-  - ~~`lib/club-facts.ts` / `lib/club-copy.ts`~~ — 두 이름이 혼용됐으나 **표시 데이터는 DB로 확정**(ARCHITECTURE §5.1)
-- **실행**: 프론트 `pnpm dev`(:3000) · 감사 `pnpm quiz:audit` · 백엔드 `./gradlew bootRun`(:8080)
-- **버전 주의**: Next 16 (코드 전 `node_modules/next/dist/docs/` 읽기)
-- **작업 방식**: `/work`·`/handoff` · **git은 Claude 실행**, `pnpm`은 사용자 직접
-  - 🚨 **앱 코드는 사용자가 직접 타이핑한다.** Claude는 **작은 단계로 쪼개 제시 → 한 줄씩 개념·문법 설명 → 사용자가 타이핑 → 확인** 을 반복. 파일을 통째로 Write/Edit 하지 않는다
-  - Claude가 직접 고쳐도 되는 것: `scripts/`·설정·문서. 반복 삭제 같은 **기계적 작업은 요청 시 대행**
-  - 이 규칙이 **HANDOFF(상태 파일)에만 있어서 한 번 어겨졌다** → 2026-08-30 `CLAUDE.md §역할` 과 `.claude/commands/work.md` 2단계에 심었다. 여기 있는 건 사본
+---
+
+## 그 외
+
+- **매칭 = 코사인(방향)** · 근소동점 밴드(`COS_BAND`)는 유클리드 거리로 가름
+- **데이터 3층**: `lib/clubs.ts`(좌표·**표시명 원본**) + `data/clubs.source.json`(S3) + `team_results` DB(배지·인물·카피)
+- **실행**: `pnpm dev`(:3000) · `pnpm quiz:audit` · 백엔드 `./gradlew bootRun`(:8080)
+- ⚠️ **Next 16** — 코드 전 `node_modules/next/dist/docs/` 읽기 ([AGENTS.md](AGENTS.md))
+- ⚠️ **`lib/questions.ts`·`lib/scoring.ts` 는 재작성 금지.** 손댔으면 **`pnpm quiz:audit` 로 기준선 대조**
+  기준선: EPL 2.38 · ETC 2.69 · ALL 4.39 · 굶는 팀 0 · 왕복 196,608건
+- **호스팅(백엔드)**: 1순위 OCI Always Free 서울. 결정 보류 — A1 확보가 복불복이라 미리 시도 권장
 
 ---
 *`/handoff` (또는 "핸드오프")로 이 파일을 갱신.*

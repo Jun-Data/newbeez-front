@@ -25,7 +25,7 @@ const pretendard = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("http://localhost:3000"), // 배포 시 실제 도메인으로 교체
+  metadataBase: new URL("https://www.newbeez.kr"),
   title: {
     default: "Newbeez - 입문의 정석",
     template: "%s | Newbeez",

@@ -32,7 +32,7 @@ function ScaleDot({ choice, big, selected, onSelect }: ScaleDotProps) {
     <button
       type="button"
       onClick={() => onSelect(choice)}
-      className={`relative rounded-full border ${big ? "size-14 [@media(max-height:600px)]:size-12" : "size-9 [@media(max-height:600px)]:size-8"} ${isSelected ? "border-[#2c2735] bg-[#2c2735] ring-4 ring-[#fbe3a5]" : "border-[#b7bbbe] bg-white"}`}
+      className={`relative rounded-full border ${big ? "size-20 [@media(max-height:600px)]:size-12" : "size-12 [@media(max-height:600px)]:size-8"} ${isSelected ? "border-[#2c2735] bg-[#2c2735] ring-4 ring-[#fbe3a5]" : "border-[#b7bbbe] bg-white"}`}
     />
   );
 }
@@ -46,7 +46,7 @@ export default function BipolarScale({
   return (
     <div className="mt-4 flex flex-1 flex-col gap-6">
       <PoleText pole={negative} />
-      <div className="relative flex max-h-83 flex-col flex-1 justify-center items-center gap-6">
+      <div className="relative flex max-h-100 flex-col flex-1 justify-center items-center gap-6">
         <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[#dddfdf]" />
         <ScaleDot choice={0} big selected={selected} onSelect={onSelect} />
         <ScaleDot choice={1} selected={selected} onSelect={onSelect} />

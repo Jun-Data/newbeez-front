@@ -6,6 +6,7 @@ import BipolarScale from "./BipolarScale";
 import { encodeAnswerCode } from "@/lib/answer-code";
 import { matchTeam } from "@/lib/scoring";
 import { toMatchInput, useQuizStore } from "../_store";
+import QuizProgress from "./QuizProgress";
 
 export default function QuizPlay() {
   const index = useQuizStore((s) => s.index);
@@ -83,9 +84,7 @@ export default function QuizPlay() {
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-4">
-      <p className="text-sm text-gray-500">
-        {index + 1} / {QUESTIONS.length}
-      </p>
+      <QuizProgress index={index} total={QUESTIONS.length} />
       <h1 className="mt-3 text-xl font-bold">{question.prompt}</h1>
       {question.kind === "league" ? (
         <div className="mt-8 flex flex-col gap-3">

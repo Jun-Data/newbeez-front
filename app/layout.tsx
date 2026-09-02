@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import Image from "next/image";
+import logo from "@/public/logo.png";
 import "./globals.css";
 
 const pretendard = localFont({
@@ -41,7 +43,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${pretendard.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <div className="mx-auto flex w-full max-w-lg flex-1 flex-col">
+          <header className="flex h-12 items-center justify-center bg-[#f2fafe]">
+            <Image src={logo} alt="newbeez" className="h-8 w-auto" />
+          </header>
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

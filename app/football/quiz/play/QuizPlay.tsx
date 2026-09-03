@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 import { QUESTIONS } from "@/lib/questions";
-import BipolarScale from "./BipolarScale";
+import BipolarScale from "./_components/BipolarScale";
 import { encodeAnswerCode } from "@/lib/answer-code";
 import { matchTeam } from "@/lib/scoring";
-import { toMatchInput, useQuizStore } from "../_store";
-import QuizProgress from "./QuizProgress";
+import { toMatchInput, useQuizStore } from "./_store";
+import QuizProgress from "./_components/QuizProgress";
 
 export default function QuizPlay() {
   const index = useQuizStore((s) => s.index);

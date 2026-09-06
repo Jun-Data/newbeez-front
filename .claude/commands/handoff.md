@@ -3,6 +3,6 @@ description: HANDOFF.md를 현재 상태·다음 할 일로 갱신
 ---
 프론트 레포의 HANDOFF.md를 지금까지의 진행 상황과 바로 다음 할 일로 갱신한다.
 
-- durable 설계·좌표·문항은 `newbeez-back/docs/`가 source of truth이므로 **중복하지 말고**, "라이브 상태 + 다음 슬라이스"만 가볍게 유지.
+- durable 설계는 `docs/ARCHITECTURE.md`(시스템)와 `lib/`(문항·좌표·채점)이 source of truth이므로 **중복하지 말고**, "라이브 상태 + 다음 슬라이스"만 가볍게 유지.
 - "슬라이스 로드맵"의 완료(✅)/미완(⬜) 상태를 현재에 맞게 갱신.
 - 현재 브랜치·마지막 커밋도 반영.

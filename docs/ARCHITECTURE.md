@@ -2,7 +2,7 @@
 
 > **범위**: 프론트/백엔드 역할 분담 · 라우팅 · 렌더링 전략 · DB 스키마 · API · UI 방침.
 > **여기 없는 것**
-> - 15팀 좌표·9문항 문구·매칭 알고리즘 → `newbeez-back/docs/` 가 원본
+> - 15팀 좌표·9문항 문구·매칭 알고리즘 → **`lib/` 가 원본**(구현이 곧 명세). 별도 설계 문서를 두지 않는다
 > - MVP 이후 기능(댓글·허브·UGC·인증·호스팅) → [FUTURE.md](FUTURE.md)
 > - 진행 상황·다음 할 일 → [HANDOFF.md](../HANDOFF.md)
 >
@@ -33,7 +33,9 @@
 | 패키지 매니저 | **pnpm** | npm·yarn 금지 |
 | 폰트 | Pretendard 서브셋 400/600/700 | `app/fonts/`, 806KB |
 
-**백엔드** — 별도 레포 `newbeez-back` (Spring Boot · MySQL 8 · `localhost:8080`). 정확한 Java/Spring 버전은 §9 미정 참고.
+**백엔드** — 별도 레포 `newbeez-back` (**Spring Boot 4.1 · Java 21 · MySQL 8** · `localhost:8080`). 로컬 `C:\newbeez-back` · GitHub `Jun-Data/newbeez-back`.
+
+⚠️ 백엔드도 **스택이 학습 데이터보다 최신**이다 — starter 가 `spring-boot-starter-webmvc`(옛 `-web` 아님) · Jackson 3 는 `tools.jackson` · JPA 는 `jakarta.persistence.*`.
 
 ---
 
@@ -116,15 +118,17 @@
 
 ### 4.1 라우팅
 
-**3단 계층**: 카테고리 홈 → 카테고리 → 테스트. 다른 카테고리도 같은 모양으로 늘어난다.
+**3단 계층**: **홈 → 카테고리 → 테스트**. 다른 카테고리도 같은 모양으로 늘어난다.
 
-| 경로 | 역할 | 렌더링 |
-|---|---|---|
-| `/` | 카테고리 홈 | 정적 |
-| `/football` | 해외축구 — **MVP에선 히어로 + 퀴즈 버튼만** ([FUTURE §2](FUTURE.md)) | 정적 |
-| `/football/quiz` | **테스트 인트로** — 히어로·시작 버튼·참여자 수. **공유·유입의 착지점** | 정적 셸 + CSR |
-| `/football/quiz/play` | 퀴즈 진행 (Q1~Q9) | 클라이언트 단독 |
-| `/football/result/[slug]` | 결과 | ISR + CSR 오버레이 |
+⚠️ **`/football` 은 테스트가 아니라 카테고리 페이지다.** 테스트는 그 아래 `/football/quiz` 부터 시작하고, 테스트 층은 **인트로 → 진행 → 결과 세 화면**으로 이루어진다.
+
+| 계층 | 경로 | 역할 | 렌더링 |
+|---|---|---|---|
+| **① 홈** | `/` | **Newbeez 홈** — 카테고리 목록. 🚫 **MVP 범위 밖** — 지금은 `/football/quiz` 로 리다이렉트 ([FUTURE §5](FUTURE.md)) | 정적 |
+| **② 카테고리** | `/football` | 해외축구 — **MVP에선 히어로 + 퀴즈 버튼만** ([FUTURE §2](FUTURE.md)) | 정적 |
+| **③ 테스트** | `/football/quiz` | **테스트 인트로** — 히어로·시작 버튼·참여자 수. **공유·유입의 착지점** | 정적 셸 + CSR |
+| ↳ | `/football/quiz/play` | 퀴즈 진행 (Q1~Q9) | 클라이언트 단독 |
+| ↳ | `/football/result/[slug]` | 결과 | ISR + CSR 오버레이 |
 
 **인트로와 진행을 나누는 이유**: 인트로는 **공유되고 색인되는 페이지**라 OG 메타데이터·정적 생성 대상이고, 진행 화면은 클라이언트 상태 덩어리라 성격이 정반대다. 퀴즈 도중 뒤로가기 시 인트로로 빠지는 동선도 자연스럽다.
 
@@ -182,7 +186,9 @@ export function generateStaticParams() {
 
 **2·3위 대안 팀은 보여주지 않는다.** `matchTeam` 은 우승 팀만 반환하며 그대로 둔다. MBTI식 단일 결과의 **확정감**이 공유 가치를 만들고, "2위와 0.02 차이"를 노출하면 신뢰가 흔들린다.
 
-**참여 비율(%)도 넣지 않는다** — 근거는 [FUTURE §2](FUTURE.md).
+**참여 비율(%)은 넣지 않는다** — "23%가 같은 결과"는 최대 집단에게 *"너 흔해"* 로 읽힌다.
+
+⚠️ **비율(%)과 팀 순위는 다르다.** 순위(`다른 사람들은 어떤 팀이 나왔을까?` Top N, **수치 없이 순서만**)는 **2차에 결과 화면에 넣기로 했다** — 공유로 들어온 사용자는 허브를 지나가지 않으므로 허브에만 두면 아무도 못 본다. MVP 범위는 아니지만 자리를 비워둘 것. 근거는 [FUTURE §2](FUTURE.md).
 
 ### 4.3 참여자 수 — 반드시 CSR
 
@@ -253,7 +259,18 @@ app/football/quiz/play/
 
 ## 5. 백엔드 설계
 
-> **`category_slug` 선반영 원칙**: 카테고리 확장이 목표이므로 카테고리 종속 테이블에는 지금부터 이 컬럼을 넣는다. 비용은 컬럼 하나, 이득은 나중에 **마이그레이션 없이 행 추가만으로** 새 카테고리를 여는 것. MVP 값은 전부 `'football'`.
+> **`category_slug` 선반영 원칙**: 카테고리 확장이 목표이므로 카테고리 종속 테이블에는 지금부터 이 컬럼을 넣는다. 비용은 컬럼 하나. MVP 값은 전부 `'football'`.
+>
+> 🚨 **"행 추가만으로 새 카테고리"가 성립하는 건 `participant_logs` 형태뿐이다.** `team_results` 는 `stadium`·`league_name`·`manager`·`legend` 처럼 **축구 전용 컬럼 덩어리**라 카메라·등산 행이 들어갈 수 없다 — `category_slug` 가 있어도 마찬가지다.
+>
+> | 테이블 | 다른 카테고리 행 |
+> |---|---|
+> | `participant_logs` (id·category_slug·result_slug·created_at) | ✅ **완전 제네릭** |
+> | `team_results` (축구 전용 컬럼 다수) | ❌ 불가 |
+>
+> 카테고리가 늘면 **`team_results` 를 늘리는 게 아니라 별도 구조로 간다.** [FUTURE §3](FUTURE.md) 의 제네릭 `items` + `extra JSON` 이 유력하지만 **⏸ 확정은 아니다** — `items` 는 원래 *UGC 입문템* 용이고, 퀴즈 결과 표시까지 겸할지는 정한 적이 없다. 4차에 결정한다.
+>
+> 지금 확실한 것 두 가지: `team_results` 의 `category_slug` 는 **확장용이 아니라 조회를 카테고리로 가르기 위한 것**이고, **`team_results` 에 범용 컬럼을 덧붙이는 방향으로 가면 안 된다.**
 
 ### 5.1 `team_results` — 하이브리드 한 테이블
 
@@ -577,9 +594,9 @@ CREATE TABLE participant_logs (
 
 | # | 항목 | 왜 막히나 |
 |---|---|---|
-| 1 | **배포 도메인** | `metadataBase`([app/layout.tsx](../app/layout.tsx))·카카오 SDK 도메인 등록이 여기 묶임 |
-| 2 | **빌드 타임 fetch 실패 대비** | 백엔드가 죽으면 프론트 빌드가 깨진다. 폴백 필요 |
-| 3 | **참여자 수 표시 임계값** | 몇 명부터 보여줄지 (§4.3) |
-| 4 | Java·Spring Boot 버전 | `newbeez-back/build.gradle` 확인 |
-| 5 | 서비스 정식 명칭 | 이 문서 제목·`CLAUDE.md` 동시 갱신 |
-| 6 | 백엔드 배포처 | 조사 완료·결정 보류 → [FUTURE §4](FUTURE.md) |
+| 1 | **빌드 타임 fetch 실패 대비** | 백엔드가 죽으면 프론트 빌드가 깨진다. 폴백 필요 |
+| 2 | **참여자 수 표시 임계값** | 몇 명부터 보여줄지 (§4.3) |
+| 3 | 서비스 정식 명칭 | 이 문서 제목·`CLAUDE.md` 동시 갱신 |
+| 4 | 백엔드 배포처 | 조사 완료·결정 보류 → [FUTURE §4](FUTURE.md) |
+
+**해소됨** — ~~배포 도메인~~ `www.newbeez.kr` 확정 · 카카오 도메인 등록·실기기 검증 완료(2026-09-01) · ~~Java·Spring Boot 버전~~ **Spring Boot 4.1.0 / Java 21** (2026-09-04 `build.gradle` 확인)

@@ -34,7 +34,7 @@
   - 문항·배점·팀 좌표·채점 로직 → 프론트 `lib/` (**이미 완성·전수검증됨. 재작성 금지**)
   - 팀 표시 정보(배지·경기장·감독·카피)·참여자 수·댓글 → 백엔드 DB
   - 두 층을 잇는 계약 = **`slug`**
-- 별도 레포 **newbeez-back** (Spring Boot 4.1 · Java 21 · MySQL 8 · `localhost:8080`) — 로컬 **`C:\newbeez-back`** · GitHub `Jun-Data/newbeez-back`.
+- 별도 레포 **newbeez-back** (Spring Boot 4.1 · Java 21 · MySQL 8 · `localhost:8080`) — 로컬 **`C:\dev\newbeez-back`** · GitHub `Jun-Data/newbeez-back`.
 - **시스템 설계(라우팅·렌더링·스키마·API)는 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 지금 만드는 것만. MVP 이후는 [docs/FUTURE.md](docs/FUTURE.md).
 - **제품 설계의 원본은 이 레포에 있다** — 문항·좌표·채점은 `lib/` 이고 **구현이 곧 명세**다. 별도 설계 문서를 두지 않는다.
   🚫 **백엔드 레포에 설계를 복사해두지 말 것.** 복사본은 반드시 낡는다 — 2026-09-04 에 백엔드가 두 달치 낡은 설계(10문항·유클리드)를 붙들고 있어 전량 폐기했다.

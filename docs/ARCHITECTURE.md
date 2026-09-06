@@ -33,7 +33,7 @@
 | 패키지 매니저 | **pnpm** | npm·yarn 금지 |
 | 폰트 | Pretendard 서브셋 400/600/700 | `app/fonts/`, 806KB |
 
-**백엔드** — 별도 레포 `newbeez-back` (**Spring Boot 4.1 · Java 21 · MySQL 8** · `localhost:8080`). 로컬 `C:\newbeez-back` · GitHub `Jun-Data/newbeez-back`.
+**백엔드** — 별도 레포 `newbeez-back` (**Spring Boot 4.1 · Java 21 · MySQL 8** · `localhost:8080`). 로컬 `C:\dev\newbeez-back` · GitHub `Jun-Data/newbeez-back`.
 
 ⚠️ 백엔드도 **스택이 학습 데이터보다 최신**이다 — starter 가 `spring-boot-starter-webmvc`(옛 `-web` 아님) · Jackson 3 는 `tools.jackson` · JPA 는 `jakarta.persistence.*`.
 

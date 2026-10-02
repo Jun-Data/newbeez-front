@@ -7,9 +7,10 @@ export interface Pole {
 }
 
 // 리그 필터(Q1) 선택지
-interface LeagueOption {
+export interface LeagueOption {
   readonly value: LeagueFilter;
-  readonly label: string;
+  readonly headline: string;
+  readonly detail: string;
 }
 
 // 판별 유니온 - kind 태그로 3종 문항을 구분
@@ -38,16 +39,18 @@ export const QUESTIONS = [
     options: [
       {
         value: "EPL",
-        label:
-          "매주 전 세계 팬들이 열광하는 화제의 중심! 가장 치열하고 자본이 넘치는 곳",
+        headline: "대세이자 화제의 중심",
+        detail: "가장 많은 이야깃거리와 예측불가능한 승부",
       },
       {
         value: "ETC",
-        label: "대세보다는 낭만! 마이너하지만 역사와 낭만이 숨 쉬는 곳",
+        headline: "전통이자 낭만의 중심",
+        detail: "오랜기간 군림해온 자리와 명성",
       },
       {
         value: "ALL",
-        label: "나의 축구 철학을 자유롭게 펼칠 수 있는 무대 어디든",
+        headline: "잘 모르겠어요",
+        detail: "나와 맞는 팀이라면 어디든",
       },
     ],
   },

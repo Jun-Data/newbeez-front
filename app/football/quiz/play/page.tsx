@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import QuizPlay from "./_components/QuizPlay";
+import QuizPlay from "./QuizPlay";
 
 export const metadata: Metadata = {
   title: "해외축구 팀 성향 테스트",

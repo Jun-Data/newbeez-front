@@ -2,10 +2,12 @@
 
 import { useEffect } from "react";
 import { QUESTIONS } from "@/lib/questions";
-import BipolarScale from "./BipolarScale";
+import BipolarScale from "./_components/BipolarScale";
 import { encodeAnswerCode } from "@/lib/answer-code";
 import { matchTeam } from "@/lib/scoring";
-import { toMatchInput, useQuizStore } from "../_store";
+import { toMatchInput, useQuizStore } from "./_store";
+import QuizProgress from "./_components/QuizProgress";
+import CardChoices from "./_components/CardChoices";
 
 export default function QuizPlay() {
   const index = useQuizStore((s) => s.index);
@@ -82,27 +84,18 @@ export default function QuizPlay() {
   const question = QUESTIONS[index];
 
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-4">
-      <p className="text-sm text-gray-500">
-        {index + 1} / {QUESTIONS.length}
-      </p>
+    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-4 short:py-2">
+      <QuizProgress index={index} total={QUESTIONS.length} />
       <h1 className="mt-3 text-xl font-bold">{question.prompt}</h1>
       {question.kind === "league" ? (
-        <div className="mt-8 flex flex-col gap-3">
-          {question.options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                setLeague(option.value);
-                goNext();
-              }}
-              className={`rounded-xl border p-4 text-left ${league === option.value ? "border-gray-900 bg-gray-50" : "border-gray-300"}`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <CardChoices
+          options={question.options}
+          selected={league}
+          onSelect={(value) => {
+            setLeague(value);
+            goNext();
+          }}
+        />
       ) : (
         <BipolarScale
           negative={question.negative}

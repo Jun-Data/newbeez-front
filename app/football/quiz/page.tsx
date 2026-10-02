@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import quizStartImage from "@/public/quiz_start.png";
-import logo from "@/public/logo.png";
 import ShareButtons from "@/components/ShareButtons";
 import ParticipantCount from "./_components/ParticipantCount";
 
@@ -20,9 +19,6 @@ export const metadata: Metadata = {
 export default function QuizIntroPage() {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-1 flex-col bg-[#b0cd2a]">
-      <header className="flex h-14 items-center justify-center bg-[#f2fafe]">
-        <Image src={logo} alt="newbeez" height={32} className="w-auto" />
-      </header>
       <main className="flex flex-1 flex-col">
         <h1 className="sr-only">해외축구 팀 성향 테스트</h1>
 

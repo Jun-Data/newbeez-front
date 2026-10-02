@@ -45,8 +45,8 @@ export default function RootLayout({
     <html lang="ko" className={`${pretendard.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <div className="mx-auto flex w-full max-w-lg flex-1 flex-col">
-          <header className="flex h-12 items-center justify-center bg-[#f2fafe]">
-            <Image src={logo} alt="newbeez" className="h-8 w-auto" />
+          <header className="flex h-12 short:h-8 items-center justify-center bg-[#f2fafe]">
+            <Image src={logo} alt="newbeez" className="h-8 short:h-6 w-auto" />
           </header>
           {children}
         </div>

@@ -6,7 +6,7 @@
 > - MVP 이후 기능(댓글·허브·UGC·인증·호스팅) → [FUTURE.md](FUTURE.md)
 > - 진행 상황·다음 할 일 → [HANDOFF.md](../HANDOFF.md)
 >
-> 최종 갱신: 2026-10-02 · 서비스 정식 명칭 미확정 · 배포 https://www.newbeez.kr
+> 최종 갱신: 2026-10-06 · 서비스 정식 명칭 미확정 · 배포 https://www.newbeez.kr
 
 ---
 
@@ -214,6 +214,7 @@ CSR 영역   참여자 수                  ← 마운트 후 fetch
 - **퀴즈 완료 시점에 1회만** 전송
 - `sessionStorage` 로 중복 차단
 - **fire-and-forget** — 응답을 기다리지 않는다. 실패해도 결과 화면에 영향 없음
+- **답코드도 함께 보낸다** — 팀(`slug`)만이 아니라 9자리 답코드까지. 분석용이며 화면에는 쓰지 않는다(§5.2). 요청 본문 형태는 백엔드 F6-3 에서 확정
 
 ### 4.5 진행 화면 구현 (S5·S6에서 확정)
 
@@ -265,7 +266,7 @@ app/football/quiz/play/
 >
 > | 테이블 | 다른 카테고리 행 |
 > |---|---|
-> | `participant_logs` (id·category_slug·result_slug·created_at) | ✅ **완전 제네릭** |
+> | `participant_logs` (id·category_slug·result_slug·answer_code·created_at) | ✅ **완전 제네릭** |
 > | `team_results` (축구 전용 컬럼 다수) | ❌ 불가 |
 >
 > 카테고리가 늘면 **`team_results` 를 늘리는 게 아니라 별도 구조로 간다.** [FUTURE §3](FUTURE.md) 의 제네릭 `items` + `extra JSON` 이 유력하지만 **⏸ 확정은 아니다** — `items` 는 원래 *UGC 입문템* 용이고, 퀴즈 결과 표시까지 겸할지는 정한 적이 없다. 4차에 결정한다.
@@ -323,13 +324,26 @@ CREATE TABLE participant_logs (
   id            BIGINT AUTO_INCREMENT PRIMARY KEY,
   category_slug VARCHAR(32) NOT NULL,
   result_slug   VARCHAR(32) NOT NULL,
-  created_at    DATETIME    NOT NULL,
+  answer_code   VARCHAR(32),             -- 답코드 원문(§3.1) · 분석용 · NULL 허용
+  created_at    DATETIME    NOT NULL,    -- UTC
   INDEX idx_cat_slug (category_slug, result_slug),
   INDEX idx_created (created_at)
 );
 ```
 
 **⚠️ 참여자 수를 매 요청 `COUNT(*)` 하지 말 것.** 바이럴로 수십만 행이 쌓이면 체감된다. → **1분 TTL 캐시**(`@Cacheable`). 1분 늦게 갱신돼도 문제없다.
+
+**`answer_code` — 분석을 위해 답까지 남긴다** (2026-10-06 추가)
+
+팀만 기록하면 *"어느 팀이 나왔나"* 까지만 알 수 있다. 답코드가 있으면 **문항별 응답 분포**와, §8.1 감사가 가정한 응답 모델(균등·중앙편향·극단편향)이 **실제와 맞는지**를 볼 수 있다. **기록하지 않은 답은 나중에 되살릴 수 없으므로** 실제 참여를 받기 전에 넣는다.
+
+- **백엔드는 해석하지 않는다.** 글자 그대로 보관할 뿐이다 — "채점·문항은 프론트"(§2) 원칙은 그대로다. 해석은 분석할 때 `lib/` 로 한다
+- **`NULL` 허용** — 답코드가 없거나 형식이 틀려도 **참여 기록 자체는 남아야** 참여자 수가 틀리지 않는다. 프론트가 답코드를 보내기 전에 백엔드가 먼저 배포돼도 깨지지 않는다
+- **길이 32** — 축구는 9자리지만 다른 카테고리의 퀴즈는 길이가 다를 수 있다. 이 테이블은 제네릭이어야 한다
+- ⚠️ **문항을 바꾸면 옛 답코드의 뜻이 달라진다**(§3.3). 분석할 때는 `created_at` 으로 변경 전후를 나눠서 본다
+- 개인정보가 아니다 — 누구의 답인지 알 수 없고, 답코드는 이미 공유 URL 에 노출되는 값이다
+
+**`created_at` 은 UTC 로 저장한다** (2026-10-06). 로컬(KST)과 배포 서버의 시간대가 다르면 값이 섞이기 때문이다. DB 를 직접 보면 한국 시각보다 9시간 이르게 보인다.
 
 이 테이블 하나가 나중에 허브의 팀 순위도 만든다 ([FUTURE §2](FUTURE.md)).
 
@@ -344,7 +358,7 @@ CREATE TABLE participant_logs (
 | GET | `/results` | **15팀 일괄** (빌드/ISR용) | Next 서버 | 불필요 |
 | GET | `/results/{slug}` | 단건 (필요 시) | Next 서버 | 불필요 |
 | GET | `/participants/count` | 참여자 수 (1분 캐시) | **브라우저** | 필요 |
-| POST | `/participants` | 참여 기록 (완료 시 1회) | **브라우저** | 필요 |
+| POST | `/participants` | 참여 기록 + 답코드 (완료 시 1회) | **브라우저** | 필요 |
 
 **`GET /results/slugs` 는 만들지 않는다** — `generateStaticParams` 가 `lib/clubs.ts` 를 쓰므로 불필요하고, 빌드-백엔드 결합만 늘어난다.
 

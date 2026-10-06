@@ -33,7 +33,7 @@
 | S7 | quiz-flow — 움직이는 것만 | ⬜ |
 | S8 | result — 결과 화면 + 4축 다이아몬드 | ⬜ |
 | S9·S10 | share — 카카오 SDK · 동적 OG 이미지 | ⬜ |
-| F6 | 백엔드 — `POST /participants` 부터 | ⬜ |
+| F6 | 백엔드 — `POST /participants` 부터 | 🟡 진행 중 — 상세는 백엔드 `HANDOFF.md` |
 
 이후: 익명 댓글 → `/football` 허브 오픈 → 카카오 로그인 + UGC
 
@@ -78,6 +78,14 @@
 ### ⬜ S8 result
 
 ⚠️ **파싱 검증 필수** — `decodeAnswerCode` 가 `null` 이면 `matchTeam` 을 아예 부르지 않는다. 안 막으면 조작 URL 로 페이지가 죽는다 (ARCHITECTURE §3.2).
+
+### ⬜ F6 연동 — 프론트가 할 일 (백엔드 준비 후)
+
+> 2026-10-06 백엔드 세션에서 남김. 백엔드 진행 상황은 `newbeez-back` 의 `HANDOFF.md`.
+
+- **참여 기록 전송** — 퀴즈 완료 시 1회 `POST /participants` (ARCHITECTURE §4.4). **답코드도 함께 보낸다** — 2026-10-06 결정, 이유는 §5.2. 완료 시점에 `encodeAnswerCode` 결과가 이미 있으므로 실어 보내기만 하면 된다
+- **참여자 수 표시** — `_components/ParticipantCount.tsx` 채우기 (§4.3)
+- ⏸ 요청·응답 본문 형태는 **백엔드 F6-3 에서 확정** — 그 전에는 호출부를 만들지 않는다
 
 ---
 

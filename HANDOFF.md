@@ -8,7 +8,7 @@
 > - MVP 이후 기능 → [docs/FUTURE.md](docs/FUTURE.md)
 > - 작업 규칙(역할·커밋·브랜치) → [CLAUDE.md](CLAUDE.md)
 
-**마지막 업데이트: 2026-10-02** — S6-b 완료(Q1 카드 + 짧은 화면 세로 예산) · `main` 병합·배포. **다음은 S7 · S3 → S8**
+**마지막 업데이트: 2026-10-20** — 코드 변경 없음. **설계 결정 반영**: 이미지 파일 없음 · 구단 공식 Instagram 유니폼 **사진** 게시물 임베드 · 답코드 `?a=`→**`#a=`** · `team_results` 전부 수동 시드 · 수익화 순서(후원→광고→유료) → ARCHITECTURE §3.1·§4.2·§4.7·§5.1·§7 · FUTURE §3·§6 · **새 문서 `docs/LEGAL.md`**(근거·출처 기록). **다음은 S7 → S8** (S3 는 폐기 — 백엔드 F7 시드로 대체)
 브랜치 `main` 하나 · origin 동기화 · 미추적 `.agents/` 는 에이전트 스킬 파일(앱과 무관)
 **🌐 배포: https://www.newbeez.kr** (Vercel · `main` 푸시 → 자동 배포)
 
@@ -26,7 +26,7 @@
 | **S2.5** | answer-code — 9자리 답코드 + 감사 | ✅ `587b4d2` |
 | **S2.7** | intro-og — OG 이미지·헤더·CTA | ✅ `bafe409` |
 | **S2.8** | intro-social — 공유 3버튼 + 참여자 수 자리 | ✅ `7b51002` |
-| S3 | clubs-data — TheSportsDB 프리페치 + 배지 15장 | ⬜ |
+| ~~S3~~ | ~~clubs-data — TheSportsDB 프리페치 + 배지 15장~~ **폐기 (2026-10-20)** — 팀 데이터는 백엔드 F7 의 Flyway 시드, 컬러는 `lib/team-display.ts`(S8 에서) | — |
 | **S4** | landing — 카테고리 `/football` + 배포 | 🟡 **배포만 완료** |
 | **S5** | quiz-store — 스토어 + `/play` + 완료 패널 | ✅ `6c7888e` |
 | **S6** | quiz-scale — 퀴즈 화면 디자인 | 🟡 **a·b 완료** · c 남음 |
@@ -64,7 +64,7 @@
 ### ⬜ S7 quiz-flow — 움직이는 것만
 
 - **자동진행 지연** — 지금은 즉시. 선택 표시를 볼 틈(200~400ms)을 줄지 결정
-- **완료 → 결과 이동** — `router.replace("/football/result/[slug]?a=…")`. S8 과 맞물림
+- **완료 → 결과 이동** — `router.replace("/football/result/[slug]#a=…")`. S8 과 맞물림. **쿼리가 아니라 해시**(2026-10-20 · ARCHITECTURE §3.1 — Instagram 임베드가 쿼리를 Meta 로 보낸다)
 - **진입 가드** — 새로고침·주소 직접 입력이면 인트로로 (푸망·방구석연구소 둘 다 그렇게 동작)
   - `_store.ts` 에 모듈 변수 `let started = false` + 인트로 CTA 를 클라이언트로 바꿔 클릭 시 `markStarted()`. **모듈 메모리는 앱 내부 이동에는 살아남고 새로고침에는 사라진다**
   - ⚠️ 정적 HTML 에 Q1 이 이미 그려져 있어 **리다이렉트 전 한 프레임 깜빡임**이 생긴다
@@ -74,10 +74,19 @@
 - ⚠️ **`ImageResponse`(`next/og`)는 한글 폰트를 직접 실어야 한다.** 기본 폰트에 한글이 없어 그냥 쓰면 **두부(□)** 가 나온다. Pretendard 서브셋을 `fetch` 해 `fonts` 옵션에 넘길 것
 - `@vercel/og` 는 옛 패키지명. 지금은 **`next/og` 내장**
 - 카카오 **커스텀 템플릿**(버튼 이름 지정)은 전환율을 올릴 수 있지만, 지금의 `sendScrap`(OG 한 곳만 관리)과 상충한다. S9 에서 판단
+- 답코드가 해시(`#a=`)로 바뀌었다 — `requestUrl` 과 받은 쪽 카톡 링크에서 **해시가 유지되는지 실기기 확인**. OG 이미지 구성(이름 + 컬러 + `newbeez.kr` 크게 · 엠블럼 ✗)은 ARCHITECTURE §8
 
 ### ⬜ S8 result
 
 ⚠️ **파싱 검증 필수** — `decodeAnswerCode` 가 `null` 이면 `matchTeam` 을 아예 부르지 않는다. 안 막으면 조작 URL 로 페이지가 죽는다 (ARCHITECTURE §3.2).
+
+2026-10-20 설계 확정 — 코드 전에 읽을 것:
+- 답코드는 클라이언트 컴포넌트에서 `window.location.hash` 로 읽는다(`useSearchParams` ✗) — §3.1·§4.2
+- 히어로 = 팀 이름 + 팀 컬러(`lib/team-display.ts` 새 파일, 15개 색상값). 배지 없음. 라이벌도 텍스트만 — §4.2·§7.4
+- 맨 아래 `KitEmbed` 컴포넌트 — 구조·규칙·폭/높이/CSP 주의는 **§4.7 그대로**. 대체 링크는 blockquote 밖에 항상 렌더
+- 독립 서비스 고지 공통 컴포넌트(푸터·임베드 아래·결과 카드) + `/privacy` — §7.6
+- `GET /results` 실패는 던진다 → **백엔드 F7 + 공개 호스팅이 S8 배포의 선행 조건** — §6. 백엔드 없이 먼저 만들려면 S8 을 "프론트 데이터만 → DB 섹션" 두 단계로 쪼갠다
+- 출시 전 실기기 매트릭스(iOS Safari 일반/개인정보 보호 · 카톡 인앱 iOS/Android · Instagram 인앱 · Firefox 엄격 · Chrome Android) — §4.7·§9 #6
 
 ### ⬜ F6 연동 — 프론트가 할 일 (백엔드 준비 후)
 
@@ -186,7 +195,7 @@
 ## 그 외
 
 - **매칭 = 코사인(방향)** · 근소동점 밴드(`COS_BAND`)는 유클리드 거리로 가름
-- **데이터 3층**: `lib/clubs.ts`(좌표·**표시명 원본**) + `data/clubs.source.json`(S3) + `team_results` DB(배지·인물·카피)
+- **데이터 3층**: `lib/clubs.ts`(좌표·**표시명 원본**) + `lib/team-display.ts`(팀 컬러 · S8 에서 생성) + `team_results` DB(소개·인물·카피·유니폼 게시물 주소 — 백엔드 Flyway 시드가 원본). **이미지 파일은 어디에도 없다** (ARCHITECTURE §4.7·§7.3)
 - **실행**: `pnpm dev`(:3000) · `pnpm quiz:audit` · 백엔드 `./gradlew bootRun`(:8080)
 - ⚠️ **Next 16** — 코드 전 `node_modules/next/dist/docs/` 읽기 ([AGENTS.md](AGENTS.md))
 - ⚠️ **`lib/questions.ts`·`lib/scoring.ts` 는 재작성 금지.** 손댔으면 **`pnpm quiz:audit` 로 기준선 대조**

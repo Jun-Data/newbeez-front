@@ -6,7 +6,8 @@
 > - MVP 이후 기능(댓글·허브·UGC·인증·호스팅) → [FUTURE.md](FUTURE.md)
 > - 진행 상황·다음 할 일 → [HANDOFF.md](../HANDOFF.md)
 >
-> 최종 갱신: 2026-10-06 · 서비스 정식 명칭 미확정 · 배포 https://www.newbeez.kr
+> 최종 갱신: 2026-10-20 · 서비스 정식 명칭 미확정 · 배포 https://www.newbeez.kr
+> 이미지·임베드·수익화의 **법적 근거와 검토 기록** → [LEGAL.md](LEGAL.md) (이 문서에는 결정과 규칙만 둔다)
 
 ---
 
@@ -48,7 +49,8 @@
 | 문항·선택지·배점 | 프론트 `lib/` | 답코드 URL 계약과 결박됨 → 앱과 함께 배포되어야 함 |
 | 팀 좌표·리그·라이벌 | 프론트 `lib/clubs.ts` | 채점 입력. 네트워크 없이 즉시 계산 |
 | 채점 로직 | 프론트 (순수함수) | 마지막 클릭 → 결과까지 왕복 0회. 전수 감사 가능 |
-| 팀 표시 정보 | 백엔드 DB | 외부 API 출처 + 이미지 자산 + 갱신 필요 |
+| 팀 표시 정보 (소개·인물·카피·유니폼 게시물 주소) | 백엔드 DB | 수동 큐레이션 + 시즌 갱신. **이미지 파일은 없다** (§4.7·§7.3) |
+| 팀 컬러 | 프론트 `lib/team-display.ts` | 표시 전용. 백엔드가 죽어도 히어로·OG 가 살아야 한다 (§7.4) |
 | 참여자 수 | 백엔드 DB | 실시간 집계 |
 
 두 층을 잇는 계약은 **`slug`** (`man-city`, `chelsea` …). `lib/clubs.ts` 와 `team_results` 가 서로를 몰라도 slug 하나로 연결된다.
@@ -72,7 +74,7 @@
 ### 3.1 답코드 규격
 
 ```
-/football/result/man-city?a=032104213
+/football/result/man-city#a=032104213
                             │└──────┘
                             │   └──── Q2~Q9 성향 8자리 (각 0~3)
                             └──────── Q1 리그 1자리 (0=EPL · 1=ETC · 2=ALL)
@@ -83,6 +85,7 @@
 - **검증**: 클라이언트에서 답코드로 `matchTeam` 을 재실행해 경로의 `slug` 와 대조. 채점 함수가 프론트에 있으므로 **추가 비용 0**
 - 파싱 실패·불일치 시 **그래프 영역만 생략**하고 팀 카드는 정상 렌더 (페이지가 깨지면 안 됨)
 - ⚠️ **URL은 한번 공유되면 못 바꾸는 계약**
+- 🔑 **`?a=`(쿼리) 가 아니라 `#a=`(해시) 다** (2026-10-20 변경 · 결과 화면 구현 전이라 비용 0). Instagram `embed.js` 는 결과 페이지의 **경로와 쿼리스트링을 iframe 주소(`rp=`)에 실어 Meta 로 보낸다** — 쿼리였다면 문항별 답 전체가 Meta 쿠키와 함께 넘어간다. 해시는 브라우저 밖으로 나가지 않는다(서버도 임베드도 받지 않음). 덤으로 서버 컴포넌트가 쿼리를 읽을 일이 없어져 정적 생성이 깨질 위험(§4.2)도 사라졌다. 근거는 [LEGAL.md §3](LEGAL.md)
 
 ### 3.2 ⚠️ 결과 화면 구현 시 반드시 처리할 것
 
@@ -141,7 +144,8 @@
                                                     │
 공유 링크 클릭 ──────────────────> 정적 HTML 즉시 ──┤ DB 왕복 0회
                                                     │
-                          ?a= 파싱 → 4축 다이아몬드 (CSR)
+                          #a= 파싱 → 4축 다이아몬드 (CSR)
+                          kit_post_url → 구단 공식 Instagram 게시물 (CSR · 뷰포트 진입 시)
 ```
 
 ```ts
@@ -154,24 +158,25 @@ export function generateStaticParams() {
 
 **`generateStaticParams` 에서 백엔드를 부르지 않는 이유**: 프론트 빌드가 백엔드 가용성에 묶이면 배포 순서 의존성이 생긴다. slug 15개는 이미 `lib/clubs.ts` 에 있다.
 
-**쿼리스트링 주의**: 서버 컴포넌트에서 `?a=` 를 읽으면 정적 생성이 깨진다. → 팀 카드는 `slug` 만으로 서버에서, 그래프는 **클라이언트 컴포넌트**에서 `useSearchParams` 로.
+**답코드는 해시(`#a=`)라 서버에 도달하지 않는다** (§3.1). 팀 카드는 `slug` 만으로 서버에서, 그래프는 **클라이언트 컴포넌트**가 마운트 후 `window.location.hash` 를 읽어 그린다. `useSearchParams` 는 쓰지 않는다.
 
-> Next 문서 원문: *"`searchParams` is a **Request-time API**... Using it will **opt the page into dynamic rendering** at request time."* (`page.md:119`)
+> 쿼리로 되돌리지 말 것 — Next 문서 원문: *"`searchParams` is a **Request-time API**... Using it will **opt the page into dynamic rendering** at request time."* (`page.md:119`). 서버 컴포넌트나 `generateMetadata` 에서 쿼리를 읽는 순간 ISR 이 사라지고 매 요청마다 서버가 돈다 — 바이럴 트래픽에서 정확히 피하고 싶은 상황이다.
 >
-> 🚨 **`generateMetadata` 에서도 `?a=` 를 읽으면 안 된다.** "답코드별 맞춤 OG" 는 매력적이지만 그 순간 ISR 이 사라지고 매 요청마다 서버가 돈다 — 바이럴 트래픽에서 정확히 피하고 싶은 상황이다.
->
-> **OG 는 팀 slug 단위로 만든다** (15장 정적). 공유되는 가치는 *"어느 팀이냐"* 이지 축 점수가 아니다. 4축 다이아몬드는 클라이언트에서 그리면 충분하다.
+> 🚨 **"답코드별 맞춤 OG" 는 만들지 않는다.** 해시는 서버에 오지 않아 읽을 수도 없다. **OG 는 팀 slug 단위로 만든다** (15장 정적 · 구성은 §8). 공유되는 가치는 *"어느 팀이냐"* 이지 축 점수가 아니다. 4축 다이아몬드는 클라이언트에서 그리면 충분하다.
 
 #### 화면 구성
 
 | 영역 | 내용 | 출처 |
 |---|---|---|
-| 정체성 선언 | 배지 + "당신과 가장 닮은 팀은 ○○" + 캐치프레이즈 | DB + 우리 카피 |
+| 정체성 선언 | **팀 컬러 배경** + "당신과 가장 닮은 팀은 ○○" + 캐치프레이즈 — 배지 없음 | 프론트(이름·컬러) + DB(카피) |
 | 4축 다이아몬드 | 내 점수 vs 팀 좌표 | **프론트** (답코드 + `lib/clubs.ts`) |
-| 팀 소개 | 정식명·연고지·창단·홈구장 | DB |
-| 인물 | 감독 · 스타 · 레전드 | DB |
-| **라이벌 팀** | 배지 + 한 줄 | `rivalSlug` + DB |
+| 팀 소개 | 정식명·연고지·창단·홈구장(이름만) | DB |
+| 인물 | 감독 · 스타 · 레전드 + 기준일 | DB |
+| **라이벌 팀** | 이름 + 한 줄 — **텍스트만** | `rivalSlug` + 라이벌 행의 DB 카피 |
 | 행동 유도 | 공유 · **나도 해보기** · 다시하기 | — |
+| **구단 공식 Instagram 게시물** | 당해 시즌 홈 유니폼 **사진** 게시물 1개를 통째로 임베드 + 대체 링크 + 독립 서비스 고지 1줄 — **맨 아래, 참고 자료** | DB `kit_post_url` + Instagram `embed.js` (**§4.7**) |
+
+**엠블럼·배지 이미지는 어디에도 없다** — 유니폼 게시물 카드의 계정 사진과 셔츠에 보이는 것으로 충분하다. 왜 그런지는 §4.7 과 [LEGAL.md](LEGAL.md).
 
 **"상극 팀"이 아니라 "라이벌 팀"이다.** `rivalSlug` 는 **좌표와 무관한 고정값**(전통 라이벌)이다. "상극"이라 부르면 사용자는 *내 성향과 정반대인 팀*을 기대하는데 실제로는 그게 아니라 **말과 내용이 어긋난다.**
 
@@ -256,6 +261,51 @@ app/football/quiz/play/
 
 **파일 안에서만 쓰는 컴포넌트는 파일을 나누지 않는다** — `BipolarScale.tsx` 안의 `PoleText` · `ScaleDot` 은 `export` 없이 같은 파일에 둔다. 밖에서 쓰이면 그때 나눈다.
 
+### 4.7 팀 이미지 — 엠블럼 없음 · 구단 공식 Instagram 게시물 임베드 (2026-10-20 확정)
+
+**이미지 파일을 두지 않는다.** 엠블럼·배지·유니폼·경기장·선수 사진 전부. 자체 제작 뱃지도, 구단 허락 요청도 하지 않는다 — 15팀을 같은 방식으로 유지보수한다. 이유와 기각한 대안(TheSportsDB·Wikimedia·로고 GitHub·직접 촬영·자체 뱃지·계정 카드)은 [LEGAL.md §1](LEGAL.md).
+
+**대신 결과 화면 맨 아래에 구단 공식 계정의 당해 시즌 홈 유니폼 '사진' 게시물 1개를 Instagram 공식 임베드로 통째로 보여 준다.** 엠블럼은 카드 머리글의 계정 사진과 셔츠에 보인다. 우리 서버는 사진을 받지도 저장하지도 않는다 — 저장하는 건 게시물 주소와 시즌뿐(§5.1). 법적 구조: 우리는 복제·전송을 하지 않고, 출처가 권리자 본인이다 ([LEGAL.md §2](LEGAL.md)).
+
+#### 지키는 규칙 — 하나라도 어기면 법적 근거가 무너진다
+
+| | 규칙 |
+|---|---|
+| 통째로 | 카드를 자르거나(`overflow: hidden`), CSS 로 덮거나, 출처·링크·좋아요 영역을 가리지 않는다. 캡션 끄기(`data-instgrm-captioned` 미사용)는 Meta 공식 옵션이라 괜찮다 |
+| 저장 금지 | 이미지·썸네일·oEmbed 응답·캡처를 DB·디스크·CDN 캐시·로그·OG·광고 어디에도 쓰지 않는다. `next.config` `images.remotePatterns` 에 `instagram.com`·`cdninstagram.com` 을 넣지 않는다 |
+| 우회 금지 | 구단이 임베드를 끄거나 게시물을 지우면 대체 링크로 바꿀 뿐, 스크래핑·스크린샷·`/embed/` 페이지 직접 fetch 로 우회하지 않는다 |
+| 선정 기준 | 구단 **공식 인증 계정**의 게시물(아디다스·푸마 등 브랜드 계정 ✗) · **첫 장이 사진**(릴스·영상 ✗ — 카드 높이와 첫 화면이 달라진다) · 유니폼·팀 중심(특정 선수 얼굴 클로즈업 단독 ✗ — 퍼블리시티) · 등록 때 인증 배지·게시물 유형을 눈으로 확인하고 시드 주석에 기록 |
+| 표기 | 섹션 제목 **"○○ 공식 Instagram 게시물"**, 대체 링크 **"Instagram에서 보기"** — Meta 브랜드 규칙상 `Instagram` 은 라틴 문자 그대로(한글 '인스타그램' ✗ · 글리프 ✗). 바로 아래 한 줄 "Newbeez는 구단과 무관한 독립 서비스입니다"(§7.6). "공식·제휴·파트너" 를 **우리 서비스에** 붙이지 않는다 |
+| 광고 | 임베드와 광고가 **같은 뷰포트에 동시에 보이지 않게**. 임베드만 모은 페이지 ✗ ([FUTURE §6](FUTURE.md)) |
+| 구단명 | 문장 속 명사로만("당신과 가장 닮은 팀은 맨체스터 시티"). 단독 대형 로고타입·구단 공식 서체 모방·엠블럼 형태·유니폼 패턴 재현 ✗ |
+
+#### 구현 구조 (S8)
+
+```
+서버 컴포넌트(ISR)   kit_post_url ──> oEmbed 생존 확인(아래) ──> <KitEmbed permalink handle />
+                                                          └ 영구 실패·NULL 이면 대체 링크만
+
+KitEmbed (클라이언트)
+  ① 대체 링크 <a href="https://www.instagram.com/{handle}/">Instagram에서 보기</a>
+     — blockquote 밖 형제로 **항상** 렌더. 스크립트가 아예 안 돌아도 HTML 만으로 보인다
+  ② <div dangerouslySetInnerHTML={{ __html }} />  — React 가 blockquote 를 다시 건드리지 않게
+     __html 은 useMemo([permalink]) 로 고정 (렌더마다 새 객체면 innerHTML 이 재대입돼 iframe 이 사라진다)
+  ③ IntersectionObserver(rootMargin 300px) 진입 시에만
+     <Script src="https://www.instagram.com/embed.js" strategy="afterInteractive"
+             onReady={() => window.instgrm?.Embeds?.process()} />
+     — 진입 전엔 Meta 로 아무 요청도 가지 않는다 (§7.6 고지의 전제)
+  ④ 성공 = iframe.instagram-media-rendered 등장(MutationObserver) → iframe.title = "○○ 공식 Instagram 게시물"
+     실패 = Script onLoad 후 12초 내 rendered 없음 → ① 을 강조 (iframe 은 제거하지 않음)
+```
+
+- `embed.js` 는 blockquote **앞에** iframe 을 끼우고, 다 그려지면 blockquote 를 **지운다**. JSX 로 그린 blockquote 를 조건부로 빼거나 그 앞에 형제를 끼우면 React 가 깨진다 → ② 필수. StrictMode 이중 effect 로 `process()` 가 두 번 불려도 처리된 blockquote 는 클래스가 떼어져 no-op
+- **폭**: 카드는 `calc(100% - 2px)`·최소 326px 유동(Preflight border-box 기준 실측 326px). 본문 327px 에선 넘치지 않지만 360px 폰(본문 312px)에서는 14px 넘친다 → 임베드 섹션만 거터를 조정해 326px 이 들어가게 하고, `overflow-hidden`·`min-width !important` 덮어쓰기는 금지. 공식 스니펫보다 좁은 폭은 Instagram 이 지원하지 않는다
+- **높이**: blockquote(약 487px) → iframe(약 645px) 교체가 CLS 로 잡힌다 → 래퍼 `min-height` 예약. 게시물마다 다르므로 시즌 등록 때 실측(§7.1)
+- **성능**: 카드 1장 전송량 약 1.8MB(iframe 문서 약 300KB + JS·CSS·이미지). 뷰포트 밖이라 LCP 영향은 없지만 ③ 지연 로드가 전제. Android WebView(카톡 인앱)는 iframe 이 같은 프로세스라 더 중요
+- **CSP 를 켠다면** `script-src 'self' 'unsafe-inline' https://www.instagram.com; frame-src https://www.instagram.com; style-src 'self' 'unsafe-inline'; object-src 'none'` 이 최소(App Router 인라인 스크립트와 embed.js 인라인 스타일 때문). 논스 방식은 ISR 과 양립 불가 → `next.config.ts` `headers()` + `Report-Only` 로 먼저 관찰. 지금은 CSP 가 없다
+- **oEmbed 생존 확인** (서버 · ISR 재생성 때 팀당 1회 = 하루 15회): `GET https://graph.facebook.com/v26.0/instagram_oembed?url={kit_post_url}&omitscript=true` — **2026-06-15 부터 토큰·앱 심사 없이** 호출 가능(시간당 1,000회). 응답은 저장하지 않는다. **영구 실패(HTTP 400 · `code 24` · `error_subcode 2207045` = 삭제·비공개·임베드 비활성)만** 대체 링크로 렌더하고, 네트워크·5xx·타임아웃·`is_transient: true` 는 임베드 유지 — Meta 장애가 폴백을 하루 동안 굳히지 않게. `fetch` 에 `cache: 'no-store'` 를 주면 페이지가 동적이 된다 → 기본 캐시(= 페이지 `revalidate`) 로. 토큰 없는 응답엔 계정명이 없어 **소유 계정 확인은 등록 때 수동**
+- **실기기 매트릭스(출시 전 · §9)**: iOS Safari 일반/개인정보 보호 탭 · 카카오톡 인앱 iOS/Android · Instagram 인앱 · Firefox 엄격 모드 · Chrome Android. 2026-10-20 PC 크롬 390px 에서 1.5~2초 내 렌더 확인. 테스트 페이지 `C:\dev\embed-test\index.html`(`이현준` PC · git 밖)
+
 ---
 
 ## 5. 백엔드 설계
@@ -273,49 +323,55 @@ app/football/quiz/play/
 >
 > 지금 확실한 것 두 가지: `team_results` 의 `category_slug` 는 **확장용이 아니라 조회를 카테고리로 가르기 위한 것**이고, **`team_results` 에 범용 컬럼을 덧붙이는 방향으로 가면 안 된다.**
 
-### 5.1 `team_results` — 하이브리드 한 테이블
+### 5.1 `team_results` — 수동 큐레이션 15행 (2026-10-20: 하이브리드 → 전부 수동)
 
 ```sql
 CREATE TABLE team_results (
-  -- ── API 동기화 영역 (배치가 건드림) ─────────────────
-  slug             VARCHAR(32) PRIMARY KEY,   -- 'man-city' (프론트와의 계약 키)
-  category_slug    VARCHAR(32) NOT NULL,
-  external_id      VARCHAR(16) NOT NULL,      -- TheSportsDB idTeam
-  api_football_id  VARCHAR(16),               -- 다른 API로 가는 다리
-  name_en          VARCHAR(64),
-  short_code       CHAR(3),                   -- 'MCI'
-  founded_year     SMALLINT,
-  stadium          VARCHAR(64),
-  stadium_capacity INT,
-  location         VARCHAR(64),
-  country          VARCHAR(32),
-  league_name      VARCHAR(64),
-  color1           CHAR(7),
-  color2           CHAR(7),
-  color3           CHAR(7),
-  badge_path       VARCHAR(128),              -- '/badges/man-city.png' (우리 자산)
-  instagram        VARCHAR(128),
-  synced_at        DATETIME,
+  slug              VARCHAR(32) PRIMARY KEY,   -- 'man-city' (프론트와의 계약 키)
+  category_slug     VARCHAR(32)  NOT NULL,     -- 'football'
 
-  -- ── 수동 큐레이션 영역 (배치가 절대 안 건드림) ───────
-  name_ko          VARCHAR(32) NOT NULL,
-  nickname_ko      VARCHAR(32),
-  location_ko      VARCHAR(32),
-  catchphrase      VARCHAR(64),
-  description      VARCHAR(500),
-  manager          VARCHAR(32),
-  manager_note     VARCHAR(48),
-  star_player      VARCHAR(32),               -- 현 소속 필수 · 이적시장마다 점검
-  star_player_note VARCHAR(48),
-  legend           VARCHAR(32),               -- 구단 역사 · 갱신 불필요
-  legend_note      VARCHAR(64),               -- 검증 가능한 기록 근거 필수
-  curated_at       DATETIME                   -- manager·star_player 기준일
+  -- ── 팀 소개 (사실 정보 · 구단 공식 사이트 기준) ──────────
+  name_ko           VARCHAR(32)  NOT NULL,     -- 운영 참조용 사본 · 화면은 lib/clubs.ts (§7.5)
+  name_en           VARCHAR(64)  NOT NULL,     -- 정식 명칭
+  nickname_ko       VARCHAR(32),
+  location_ko       VARCHAR(32)  NOT NULL,     -- 연고지
+  founded_year      SMALLINT     NOT NULL,
+  stadium           VARCHAR(64)  NOT NULL,     -- 이름만 · 사진 없음 (§7.3)
+  league_name       VARCHAR(64)  NOT NULL,
+
+  -- ── 우리 카피 ───────────────────────────────────────
+  catchphrase       VARCHAR(64)  NOT NULL,
+  description       VARCHAR(500),              -- 광고 단계엔 자체 글이 임베드 카드보다 많아야 한다(FUTURE §6) → S8 에서 상한 재검토
+
+  -- ── 인물 (docs/club-people-*.md 가 원천) ────────────
+  manager           VARCHAR(32),
+  manager_note      VARCHAR(48),
+  star_player       VARCHAR(32),               -- 현 소속 필수 · 이적시장마다 점검
+  star_player_note  VARCHAR(48),
+  legend            VARCHAR(32),               -- 구단 역사 · 갱신 불필요
+  legend_note       VARCHAR(64),               -- 검증 가능한 기록 근거 필수
+  curated_at        DATE         NOT NULL,     -- 감독·스타 기준일 (§7.2)
+
+  -- ── 구단 공식 Instagram (§4.7) ───────────────────────
+  instagram_handle  VARCHAR(30)  NOT NULL,     -- 'mancity' → 대체 링크의 원천 · 항상 있다
+  kit_post_url      VARCHAR(255) NULL UNIQUE,  -- 'https://www.instagram.com/p/DYjcda2jpzj/' · NULL = 표시할 게시물 없음 → 대체 링크만
+  kit_season_start  SMALLINT     NULL,         -- 2026 → '2026/27' 라벨은 API/프론트에서 조립
+  CHECK (kit_post_url IS NULL OR kit_post_url LIKE 'https://www.instagram.com/p/%/'),
+  CHECK ((kit_post_url IS NULL) = (kit_season_start IS NULL))
 );
 ```
 
-**⚠️ 한 테이블로 합친 대가 — 배치에 규율이 필요하다.** 동기화 Service는 **메서드 하나로 좁히고, 기존 엔티티를 로드해 API 영역 setter만 호출**할 것. 새 엔티티를 만들어 `save()` 하면 **수동 큐레이션 컬럼이 전부 날아간다.** 미러링 패턴의 1번 사고다.
+**없앤 것** — `external_id`·`api_football_id`·`synced_at`·`badge_path`(TheSportsDB 동기화 영역 전체) · `color1~3`(→ 프론트 `lib/team-display.ts`, §7.4) · `short_code`·`stadium_capacity`·`location`·`country`·`instagram`(화면에 안 쓰거나 `instagram_handle` 로 대체). 배지가 사라지며 API 동기화의 효용이 없어졌고, 남는 사실 정보는 15행이라 손으로 넣는 게 싸다. 시즌마다 바뀌는 항목(감독·스타·유니폼 게시물)은 원래부터 수동이었다. TheSportsDB 를 쓰지 않으므로 출처 표기 의무도 없다.
 
-**`synced_at` / `curated_at` 분리 이유**: 자동/수동 데이터의 신선도를 따로 판단해야 화면에 정확한 기준일을 표기하고 오래된 섹션만 숨길 수 있다.
+**읽기 전용 테이블이다.** 런타임에 이 테이블을 쓰는 코드는 0개 — 엔티티는 setter 없이 `@org.hibernate.annotations.Immutable`(Hibernate ORM 애노테이션 · DB 벤더 기능이 아니라 규칙 위반 아님), Repository 는 조회 메서드만. 옛 설계의 "새 엔티티 `save()` 로 큐레이션을 날리는 사고"가 구조적으로 사라진다.
+
+**데이터는 Flyway 시드 파일이 진실이다** (백엔드 `src/main/resources/db/migration/`).
+- DDL 은 `V__`(`V1__participant_logs.sql` · `V2__team_results.sql`), **15행 데이터는 `R__team_results_seed.sql`**(`DELETE … WHERE category_slug = 'football'; INSERT … 15행` — 파일이 바뀔 때만 자동 재적용, InnoDB DML 이라 트랜잭션 하나로 전부-또는-전무). **DDL 과 DML 을 한 파일에 섞지 않는다** — MySQL 의 DDL 암묵적 커밋 때문에 실패 시 반쯤 적용된 채 남는다
+- `INSERT … ON DUPLICATE KEY UPDATE` 같은 벤더 구문 ✗ (FUTURE §4 락인 방어)
+- 운영 DB 를 직접 `UPDATE` 하면 다음 시드 변경 때 덮어써진다 → 반드시 파일에도 반영 (§7.1 런북 2단계)
+- 시드 파일의 각 행에 **출처(공식 사이트 URL)·확인일** 을 주석으로 남긴다 — 시즌 갱신 때 재검증 근거
+
+**`kit_post_url` 검증은 Java 에서.** 저장 전 쿼리스트링(`?igsh=`·`?utm_source=`)을 떼고 `https://www.instagram.com/p/{code}/` 로 정규화한 뒤 `^https://www\.instagram\.com/p/[A-Za-z0-9_-]+/$` 로 검사한다 — `/reel/`·`/tv/` 를 그대로 붙인 실수와 다른 호스트(CSP `frame-src` 가 막는다)를 잡는다. **사진 게시물인지는 정규식이 보장하지 못한다**(릴스 코드를 `/p/` 로 넣어도 영상이 렌더된다) → 등록 체크리스트 항목(§4.7 선정 기준). DB 의 `CHECK` 는 이식 가능한 `LIKE` 까지만 — 정규식 `CHECK` 는 DBMS 마다 문법이 달라 쓰지 않는다.
 
 ### 5.2 `participant_logs`
 
@@ -366,20 +422,44 @@ CREATE TABLE participant_logs (
 
 **CORS**: 브라우저에서 직접 부르는 엔드포인트만 설정.
 
+**`GET /results` 응답 형태** (F7 에서 확정 · 칸 이름은 §5.1 의 camelCase): `{ slug, nameEn, nicknameKo, locationKo, foundedYear, stadium, leagueName, catchphrase, description, manager, managerNote, starPlayer, starPlayerNote, legend, legendNote, curatedAt, instagramHandle, kit: { postUrl, seasonLabel: '2026/27' } | null }` — 이름·컬러·좌표는 넣지 않는다(프론트 원본).
+
+**결과 페이지가 이 호출에 실패하면 삼키지 않고 던진다** (2026-10-20 · §9 #1 해소). 빌드는 실패하고(이전 배포 유지 — Vercel 은 성공한 배포만 승격) ISR 재생성은 마지막 성공본을 유지한다. `try/catch` 로 삼켜 폴백을 렌더하면 **열화된 페이지가 '성공'으로 24시간 캐시**된다. 따라서 **백엔드가 먼저 떠 있어야 S8 을 배포할 수 있다.** `AbortSignal.timeout()` 은 둔다. 백엔드 정지 위험은 [FUTURE §4](FUTURE.md) 유휴 회수 항목.
+
 ---
 
 ## 7. 운영
 
-### 7.1 데이터 갱신
+### 7.1 데이터 갱신 — 전부 수동 · 시드 파일이 진실 (§5.1)
 
 | 대상 | 주기 | 방식 |
 |---|---|---|
-| 팀 기본 정보 (배지·경기장·색) | 시즌 단위 (연 2회) | 배치 / 수동 트리거 |
-| **감독** | 경질 시 수시 | 수동 |
-| **스타 선수** | **이적시장 마감 후** (9월 초 · 2월 초) | 수동 |
-| 레전드 | 없음 | — |
+| **홈 유니폼 게시물** (`kit_post_url`·`kit_season_start`) | **연 1회 · 5~7월** (2026 년엔 5/4 바이에른 ~ 7/2 바르셀로나) | 아래 시즌 교체 절차 |
+| **감독** | 경질 시 수시 | 시드 수정 |
+| **스타 선수** | **이적시장 마감 후** (9월 초 · 2월 초) | 시드 수정 |
+| 경기장명(스폰서)·리그명 | 바뀔 때 (몇 년에 한 번) | 시드 수정 |
+| 레전드 · 창단 · 연고지 | 없음 | — |
 
-**갱신 실패 시 기존 값을 덮어쓰지 말 것.** 팀 단위 부분 성공 허용.
+**새 유니폼이 아직 안 나온 팀은 지난 시즌 게시물을 그대로 둔다.** 빈 카드보다 낡은 카드가 낫다(§4.3 과 같은 원칙).
+
+#### 시즌 교체 절차 (팀당 5분)
+
+1. Instagram 앱에서 구단 공식 계정(인증 배지 확인)의 새 홈 유니폼 게시물을 열고 **첫 장이 사진**인지 확인 → `…` → 링크 복사
+2. `R__team_results_seed.sql` 의 `kit_post_url`·`kit_season_start` 수정 + 주석에 확인일 (쿼리스트링은 떼고 넣는다 — Java 가 정규화하지만 diff 가 지저분해진다)
+3. 커밋 → 배포 (Flyway 가 PC 2대·운영 DB 를 같은 값으로 수렴)
+4. `revalidatePath('/football/result/[slug]', 'page')` 를 부르는 비밀 토큰 Route Handler 호출(없으면 Vercel Redeploy) → 15개 결과 URL 을 한 번씩 방문해 즉시 재생성 — ISR 24h 는 "다음 방문자까지" 라 트래픽 적은 팀은 며칠 낡을 수 있다
+5. 실기기에서 카드 높이 실측 → `min-height` 상수 갱신 (§4.7)
+6. 같은 때 §7.6 의 제3자 수집도구 표가 현실과 맞는지 점검
+
+#### 권리자 삭제 요청 런북 — 푸터 약속: **"요청 확인 후 24시간 이내"**
+
+| 순서 | 행동 | 효과 |
+|---|---|---|
+| 1 | 운영 DB `UPDATE team_results SET kit_post_url = NULL, kit_season_start = NULL WHERE slug = '…'` | 다음 재생성부터 대체 링크만 |
+| 2 | `R__team_results_seed.sql` 에 같은 변경 커밋·배포 | 파일이 진실 — 빠뜨리면 다음 시즌 교체 때 되살아난다 |
+| 3 | `revalidatePath` 호출 또는 Vercel Redeploy | 15장 즉시 재생성 — "24시간 이내" 를 실제로 지키는 수단 |
+
+DB 만 고치면 ISR 이 최대 하루 옛 카드를 내보낸다. 구단 쪽도 게시물 삭제·임베드 비활성으로 즉시 차단할 수 있고, oEmbed 생존 확인(§4.7)이 다음 재생성 때 이를 반영한다.
 
 ### 7.2 신선도 방어 (수동 데이터)
 
@@ -398,18 +478,19 @@ CREATE TABLE participant_logs (
                             감독·스타는 2026년 8월 기준
 ```
 
-### 7.3 이미지 자산
+### 7.3 이미지 자산 — 두지 않는다 (2026-10-20)
 
-- 배지 URL에 타임스탬프가 박혀 있어 저쪽이 갱신하면 **링크가 깨진다** → **파일을 받아 `public/badges/{slug}.png` 로 보관**
-- hotlink 금지 (상대 서버 부담 + Next 이미지 최적화 불가)
-- **선수 사진은 넣지 않는다** (초상권)
-- 출처 표기 푸터 필요 (TheSportsDB 이미지는 "Most are fan created", 라이선스 불명확)
+- **이미지 파일을 레포·DB·CDN 어디에도 두지 않는다** — 배지·엠블럼·유니폼·경기장·선수 전부. `public/badges/` 는 만들지 않는다. 팀 이미지는 §4.7 임베드가 유일하고, 임베드도 저장·캡처·썸네일 금지. 경기장은 이름만(사진 ✗ — Commons CC BY-SA 도 파일별 표기 관리 비용 때문에 기각)
+- **선수 사진은 넣지 않는다** (초상권·퍼블리시티)
+- `next.config` `images.remotePatterns` 에 `instagram.com`·`cdninstagram.com` 계열 ✗ — `next/image` 는 원격 이미지를 서버가 받아 캐시하므로 그 순간 우리가 복제·전송한 것이 된다
+- OG 이미지(15장 정적)의 입력은 팀 이름 + 팀 컬러 + `newbeez.kr` 뿐 (§8)
+- 외부 데이터 출처 표기 푸터는 **필요 없어졌다** — TheSportsDB 를 쓰지 않는다. 대신 §7.6 의 독립 서비스 고지를 둔다
 
 ### 7.4 색상 사용 주의
 
 `color2` 가 `#FFFFFF` 인 팀이 다수(첼시·레알·토트넘 등). 흰 배경에 그대로 쓰면 보이지 않는다. → **대비 검사 후 테두리 추가 또는 배경 반전.**
 
-팀 색은 **표시 전용**이며 매칭에는 쓰지 않는다. `lib/clubs.ts` 가 아니라 DB/표시 층에 둔다.
+팀 색은 **표시 전용**이며 매칭에는 쓰지 않는다. `lib/clubs.ts`(매칭 모듈)가 아니라 **`lib/team-display.ts`** 에 둔다 — 2026-10-20 에 DB 에서 프론트로 옮겼다: 백엔드 없이 히어로·OG 15장을 만들 수 있어야 하고, 15개 색상값은 거의 바뀌지 않는다. 원천은 구단 공식 사이트·유니폼의 대표색이며 색상값 자체는 권리 대상이 아니다. **색만 쓴다** — 엠블럼 형태·유니폼 스트라이프 패턴 재현 ✗ (§4.7).
 
 ### 7.5 한국어 표기 규칙
 
@@ -436,10 +517,28 @@ CREATE TABLE participant_logs (
 
 - **FC·CF 접미사를 붙이지 않는다** ("리버풀 FC"는 한국에서 안 씀). 예외는 **AC밀란** — "밀란"만 쓰면 인테르 밀란과 혼동. **붙여쓰기**
 - **바르셀로나**는 정식 "FC 바르셀로나"지만 국내에서 FC를 안 붙이는 쪽이 압도적
+- 구단명은 **문장 속 명사**로만 쓴다 — 단독 대형 로고타입·구단 공식 서체 모방 ✗. `Instagram` 은 라틴 표기 (§4.7 표기 규칙)
 
 #### 인명
 
 인물 이름은 **DB에만** 존재하므로 관리 지점이 하나다. 갈리는 7건(홀란·파머·아구에로 등)은 [club-people-2026-08.md §4](club-people-2026-08.md) 참고.
+
+### 7.6 법적 고지 · 개인정보처리방침 — MVP 필수 (2026-10-20)
+
+**독립 서비스 고지** — 공통 컴포넌트로 만들어 **푸터 · 임베드 섹션 아래 · 결과 카드** 세 곳에서 재사용:
+> Newbeez는 구단과 무관한 독립 서비스입니다. 구단 명칭·엠블럼의 권리는 각 구단에 있습니다. 게시물은 구단 공식 Instagram 계정의 공개 게시물을 Instagram 공식 기능으로 표시한 것이며, 권리자의 요청이 있으면 **확인 후 24시간 이내**에 내립니다 — 연락처: (운영자 이메일)
+
+**개인정보처리방침(`/privacy`) — 두 항목으로 나눈다**
+
+| 항목 | 내용 |
+|---|---|
+| **제3자 수집도구** | **Instagram 게시물 임베드**(Meta Platforms) — 임베드가 **화면에 표시될 때만** 로드되며, 그때 Meta 에 방문 페이지 주소(도메인·경로 = 어느 팀 결과인지)·브라우저/기기 정보·조회 이벤트가 전달되고 `.instagram.com` 쿠키(`mid` 최대 400일 · Meta 정책에 따라 추가될 수 있음)가 설정된다. Instagram 로그인 상태면 계정과 연결될 수 있다. 거부: 서드파티 쿠키 차단 또는 해당 섹션 미열람. Meta 쿠키 정책 링크. **카카오 공유 SDK** 도 같은 표에. 광고 도입 시 Google/Kakao 행 + 옵트아웃 링크 추가 ([FUTURE §6](FUTURE.md)) |
+| **국외 이전 (처리위탁·보관)** | Vercel(미국) 의 접속 로그(IP·UA) — 이전받는 자·국가·항목·목적·보유기간·거부 방법. Vercel 리전·로그 보관지는 확인 항목(§9 #7) |
+
+- 우리가 수집·저장하는 개인정보: **없음** (참여 기록에 IP·식별자 없음 §5.2). 이 문장은 **MVP 한정**이다 — 로그인·결제가 생기면 법정 기재사항 전부가 의무가 된다 ([FUTURE §3 #6·§6](FUTURE.md))
+- 답코드를 해시로 둔 것(§3.1)과 임베드 지연 로드(§4.7 ③)가 이 고지를 **사실로 만든다.** 구현이 바뀌면 문구도 바꾼다
+- 국내법상 쿠키 동의 배너는 필수가 아니다. 제3자 수집도구 기재는 개인정보위 **권고** 사항이지만, 광고 단계에선 Google 정책상 **의무**가 된다
+- 근거·실측 기록: [LEGAL.md §3](LEGAL.md)
 
 ---
 
@@ -461,6 +560,8 @@ CREATE TABLE participant_logs (
 
 푸망·방구석연구소의 **결과 이미지 저장**은 **동적 OG 이미지**로 상당 부분 대체된다 — 공유 카드 자체가 내 결과를 담으면 별도 저장 기능이 덜 필요하다.
 
+**OG 이미지 구성(팀 slug 단위 15장)** = 팀 이름 + 팀 컬러(`lib/team-display.ts`) + **`newbeez.kr` 을 구단명보다 크게** + "비공식 팬 성향 테스트" 작은 문구. 엠블럼·구단 게시물·썸네일 ✗ (§4.7·§7.3). 백엔드 호출 없이 만들어진다.
+
 **공유 버튼 3개** (`components/ShareButtons.tsx` · 인트로 + 결과 공용)
 
 | | 구현 | 근거 |
@@ -472,6 +573,7 @@ CREATE TABLE participant_logs (
 - 버튼 순서는 레퍼런스 실측(시작하기 → 참여자 수 → 공유), 56px 원형
 - **키가 없으면 카카오 버튼과 SDK 를 아예 렌더하지 않는다** — 저장소를 받은 사람이 `.env.local` 없이 실행해도 화면이 정상이어야 하므로
 - ⚠️ 스크랩 방식의 대가: 카카오 서버가 URL 에 **도달 가능해야** 하고(로컬 검증 불가), **스크랩 캐시** 때문에 OG 를 고쳐도 즉시 반영되지 않는다
+- ⏸ 답코드가 해시(`#a=`)로 바뀌었다(§3.1). 카카오 `requestUrl` 과 받은 쪽 링크에서 **해시가 유지되는지 S9 에서 실기기 확인** — 스크랩(OG)은 slug 단위라 영향 없음
 
 ### 8.1 척도 UI — 세로축 4점
 
@@ -664,9 +766,11 @@ CREATE TABLE participant_logs (
 
 | # | 항목 | 왜 막히나 |
 |---|---|---|
-| 1 | **빌드 타임 fetch 실패 대비** | 백엔드가 죽으면 프론트 빌드가 깨진다. 폴백 필요 |
 | 2 | **참여자 수 표시 임계값** | 몇 명부터 보여줄지 (§4.3) |
-| 3 | 서비스 정식 명칭 | 이 문서 제목·`CLAUDE.md` 동시 갱신 |
-| 4 | 백엔드 배포처 | 조사 완료·결정 보류 → [FUTURE §4](FUTURE.md) |
+| 3 | 서비스 정식 명칭 | 이 문서 제목·`CLAUDE.md` 동시 갱신. **먼저 KIPRIS 에서 '뉴비즈 / NEWBEEZ / NEWBIZ' 선등록 상표를 조회**(유료 상품명이 될 이름 — [LEGAL.md §6](LEGAL.md)) |
+| 4 | 백엔드 배포처 | 조사 완료·결정 보류 → [FUTURE §4](FUTURE.md) — **유휴 7일 회수 조건이 추가됐다** |
+| 5 | **15팀 유니폼 사진 게시물 선정** | 첫 장이 사진인 공식 게시물: 맨시티·바르셀로나·PSG·아틀레티코·토트넘 ✅ · **나머지 10팀은 앱에서 골라야 함** ([LEGAL.md §7](LEGAL.md)) |
+| 6 | **임베드 실기기 매트릭스** | §4.7 — 2026-10-20 PC 크롬만 확인 |
+| 7 | Vercel 리전·로그 보관지 | 처리방침 국외 이전 항목 (§7.6) |
 
-**해소됨** — ~~배포 도메인~~ `www.newbeez.kr` 확정 · 카카오 도메인 등록·실기기 검증 완료(2026-09-01) · ~~Java·Spring Boot 버전~~ **Spring Boot 4.1.0 / Java 21** (2026-09-04 `build.gradle` 확인)
+**해소됨** — ~~배포 도메인~~ `www.newbeez.kr` 확정 · 카카오 도메인 등록·실기기 검증 완료(2026-09-01) · ~~Java·Spring Boot 버전~~ **Spring Boot 4.1.0 / Java 21** (2026-09-04 `build.gradle` 확인) · ~~#1 빌드 타임 fetch 실패 대비~~ **실패는 던진다 + 백엔드 먼저 배포** (2026-10-20 · §6) · ~~이미지 권리 방침~~ **엠블럼 없음 · 구단 공식 Instagram 게시물 임베드** (2026-10-20 · §4.7)

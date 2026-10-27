@@ -74,7 +74,7 @@
 ### 3.1 답코드 규격
 
 ```
-/football/result/man-city#a=032104213
+/football/result/man-city#a=032102223
                             │└──────┘
                             │   └──── Q2~Q9 성향 8자리 (각 0~3)
                             └──────── Q1 리그 1자리 (0=EPL · 1=ETC · 2=ALL)

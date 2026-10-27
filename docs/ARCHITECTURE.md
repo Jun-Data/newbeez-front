@@ -6,7 +6,7 @@
 > - MVP 이후 기능(댓글·허브·UGC·인증·호스팅) → [FUTURE.md](FUTURE.md)
 > - 진행 상황·다음 할 일 → [HANDOFF.md](../HANDOFF.md)
 >
-> 최종 갱신: 2026-10-27 (§3.1 예시 · §3 감사 상태 · §8.2 축 상한 정정 · §6 `POST /participants` 계약) · 서비스 정식 명칭 미확정 · 배포 https://www.newbeez.kr
+> 최종 갱신: 2026-10-27 (§3.1 예시 · §3 감사 상태 · §8.2 축 상한 정정 · §6 `POST /participants` 계약 · §4.3 임계값은 서버 · §6 호스팅 조건) · 서비스 정식 명칭 미확정 · 배포 https://www.newbeez.kr
 > 이미지·임베드·수익화의 **법적 근거와 검토 기록** → [LEGAL.md](LEGAL.md) (이 문서에는 결정과 규칙만 둔다)
 
 ---
@@ -446,7 +446,7 @@ Content-Type: application/json
 
 **`GET /results` 응답 형태** (F7 에서 확정 · 칸 이름은 §5.1 의 camelCase): `{ slug, nameEn, nicknameKo, locationKo, foundedYear, stadium, leagueName, catchphrase, description, manager, managerNote, starPlayer, starPlayerNote, legend, legendNote, curatedAt, instagramHandle, kit: { postUrl, seasonLabel: '2026/27' } | null }` — 이름·컬러·좌표는 넣지 않는다(프론트 원본).
 
-**결과 페이지가 이 호출에 실패하면 삼키지 않고 던진다** (2026-10-20 · §9 #1 해소). 빌드는 실패하고(이전 배포 유지 — Vercel 은 성공한 배포만 승격) ISR 재생성은 마지막 성공본을 유지한다. `try/catch` 로 삼켜 폴백을 렌더하면 **열화된 페이지가 '성공'으로 24시간 캐시**된다. 따라서 **백엔드가 먼저 떠 있어야 S8 을 배포할 수 있다.** `AbortSignal.timeout()` 은 둔다. 백엔드 정지 위험은 [FUTURE §4](FUTURE.md) 유휴 회수 항목.
+**결과 페이지가 이 호출에 실패하면 삼키지 않고 던진다** (2026-10-20 · §9 #1 해소). 빌드는 실패하고(이전 배포 유지 — Vercel 은 성공한 배포만 승격) ISR 재생성은 마지막 성공본을 유지한다. `try/catch` 로 삼켜 폴백을 렌더하면 **열화된 페이지가 '성공'으로 24시간 캐시**된다. 따라서 **백엔드가 먼저 떠 있어야 S8 을 배포할 수 있다.** `AbortSignal.timeout()` 은 둔다. 그래서 운영 백엔드는 **유휴 회수가 없는 호스팅**이어야 한다(2026-10-27 · [FUTURE §4](FUTURE.md)). 팀 콘텐츠를 프론트 정적 데이터로 옮겨 이 결합을 없애는 안도 검토했으나, 코드와 따로 바뀌는 편집 콘텐츠이고 3차·4차 데이터도 DB 에 쌓이므로 백엔드에 둔다(2026-10-27).
 
 ---
 
@@ -790,7 +790,7 @@ DB 만 고치면 ISR 이 최대 하루 옛 카드를 내보낸다. 구단 쪽도
 |---|---|---|
 | 2 | **참여자 수 표시 임계값** | 몇 명부터 보여줄지 (§4.3) |
 | 3 | 서비스 정식 명칭 | 이 문서 제목·`CLAUDE.md` 동시 갱신. **먼저 KIPRIS 에서 '뉴비즈 / NEWBEEZ / NEWBIZ' 선등록 상표를 조회**(유료 상품명이 될 이름 — [LEGAL.md §6](LEGAL.md)) |
-| 4 | 백엔드 배포처 | 조사 완료·결정 보류 → [FUTURE §4](FUTURE.md) — **유휴 7일 회수 조건이 추가됐다** |
+| 4 | 백엔드 배포처 | 조사 완료 · 결정은 백엔드 첫 배포(D1) 때 → [FUTURE §4](FUTURE.md) — **유휴 회수가 없어야 한다**(2026-10-27) |
 | 5 | **15팀 유니폼 사진 게시물 선정** | 첫 장이 사진인 공식 게시물: 맨시티·바르셀로나·PSG·아틀레티코·토트넘 ✅ · **나머지 10팀은 앱에서 골라야 함** ([LEGAL.md §7](LEGAL.md)) |
 | 6 | **임베드 실기기 매트릭스** | §4.7 — 2026-10-20 PC 크롬만 확인 |
 | 7 | Vercel 리전·로그 보관지 | 처리방침 국외 이전 항목 (§7.6) |

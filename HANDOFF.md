@@ -203,7 +203,7 @@
 - ⚠️ **Next 16** — 코드 전 `node_modules/next/dist/docs/` 읽기 ([AGENTS.md](AGENTS.md))
 - ⚠️ **`lib/questions.ts`·`lib/scoring.ts` 는 재작성 금지.** 손댔으면 **`pnpm quiz:audit` 로 기준선 대조**
   기준선: EPL 2.38 · ETC 2.69 · ALL 4.39 · 굶는 팀 0 · 왕복 196,608건
-- **호스팅(백엔드)**: 1순위 OCI Always Free 서울. 결정 보류 — A1 확보가 복불복이라 미리 시도 권장
+- **호스팅(백엔드)**: 1순위 OCI 서울. 결정은 백엔드 첫 배포(D1) 때 — **유휴 회수가 없어야 한다**(2026-10-27 · Always Free 그대로면 PAYG 또는 Cloud Run). A1 확보가 복불복이라 미리 시도 권장
 
 ---
 *`/handoff` (또는 "핸드오프")로 이 파일을 갱신.*

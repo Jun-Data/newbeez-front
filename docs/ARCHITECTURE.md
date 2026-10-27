@@ -6,7 +6,7 @@
 > - MVP 이후 기능(댓글·허브·UGC·인증·호스팅) → [FUTURE.md](FUTURE.md)
 > - 진행 상황·다음 할 일 → [HANDOFF.md](../HANDOFF.md)
 >
-> 최종 갱신: 2026-10-27 (§3.1 예시 · §3 감사 상태 · §8.2 축 상한 정정) · 서비스 정식 명칭 미확정 · 배포 https://www.newbeez.kr
+> 최종 갱신: 2026-10-27 (§3.1 예시 · §3 감사 상태 · §8.2 축 상한 정정 · §6 `POST /participants` 계약) · 서비스 정식 명칭 미확정 · 배포 https://www.newbeez.kr
 > 이미지·임베드·수익화의 **법적 근거와 검토 기록** → [LEGAL.md](LEGAL.md) (이 문서에는 결정과 규칙만 둔다)
 
 ---
@@ -219,7 +219,7 @@ CSR 영역   참여자 수                  ← 마운트 후 fetch
 - **퀴즈 완료 시점에 1회만** 전송
 - `sessionStorage` 로 중복 차단
 - **fire-and-forget** — 응답을 기다리지 않는다. 실패해도 결과 화면에 영향 없음
-- **답코드도 함께 보낸다** — 팀(`slug`)만이 아니라 9자리 답코드까지. 분석용이며 화면에는 쓰지 않는다(§5.2). 요청 본문 형태는 백엔드 F6-3 에서 확정
+- **답코드도 함께 보낸다** — 팀(`slug`)만이 아니라 9자리 답코드까지. 분석용이며 화면에는 쓰지 않는다(§5.2). 요청 본문 형태는 **§6**(2026-10-27 확정)
 
 ### 4.5 진행 화면 구현 (S5·S6에서 확정)
 
@@ -421,6 +421,26 @@ CREATE TABLE participant_logs (
 **`/results` 를 일괄 조회로 둔 이유**: 빌드 시 15번 호출할 이유가 없다. 15행뿐.
 
 **CORS**: 브라우저에서 직접 부르는 엔드포인트만 설정.
+
+**`POST /participants` 요청·응답** (2026-10-27 확정 · 백엔드 F6-3)
+
+```
+POST /api/v1/participants
+Content-Type: application/json
+
+{ "categorySlug": "football", "resultSlug": "man-city", "answerCode": "032102223" }
+```
+
+| 칸 | 규칙 | 어기면 |
+|---|---|---|
+| `categorySlug` | 필수 · 서버 허용 목록에 있는 값(MVP: `football`) | **400** |
+| `resultSlug` | 필수 · `^[a-z0-9-]{1,32}$` — **형식만** 본다. 15팀 목록과 대조하지 않는다(목록 원본은 `lib/clubs.ts`) | **400** |
+| `answerCode` | 선택 · 숫자 1~32자 | **요청은 받는다** — 기록은 남기고 `answer_code` 만 `NULL` (§5.2). 축구 9자리 규칙은 백엔드에 두지 않는다 — 원본은 `lib/answer-code.ts`, 분석할 때 `decodeAnswerCode` 로 판정 |
+
+- **성공 = `201 Created`, 본문 없음.** 프론트는 응답을 읽지 않는다(§4.4 fire-and-forget)
+- **`id` 를 돌려주지 않는다** — 순번이라 전체 참여자 수가 드러나 §4.3 의 최소 표본 임계값을 우회한다
+- JSON 이 깨지면 400. 400 본문은 Spring 기본 형식이고 프론트는 읽지 않는다
+- `application/json` POST 라 브라우저가 `OPTIONS` 사전 요청을 먼저 보낸다 → 백엔드 CORS(F6-5)에서 `OPTIONS` · `Content-Type` 을 허용해야 한다
 
 **`GET /results` 응답 형태** (F7 에서 확정 · 칸 이름은 §5.1 의 camelCase): `{ slug, nameEn, nicknameKo, locationKo, foundedYear, stadium, leagueName, catchphrase, description, manager, managerNote, starPlayer, starPlayerNote, legend, legendNote, curatedAt, instagramHandle, kit: { postUrl, seasonLabel: '2026/27' } | null }` — 이름·컬러·좌표는 넣지 않는다(프론트 원본).
 

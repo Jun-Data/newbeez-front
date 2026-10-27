@@ -94,7 +94,10 @@
 
 - **참여 기록 전송** — 퀴즈 완료 시 1회 `POST /participants` (ARCHITECTURE §4.4). **답코드도 함께 보낸다** — 2026-10-06 결정, 이유는 §5.2. 완료 시점에 `encodeAnswerCode` 결과가 이미 있으므로 실어 보내기만 하면 된다
 - **참여자 수 표시** — `_components/ParticipantCount.tsx` 채우기 (§4.3)
-- ⏸ 요청·응답 본문 형태는 **백엔드 F6-3 에서 확정** — 그 전에는 호출부를 만들지 않는다
+- ✅ `POST /participants` 요청·응답 형태 **확정 (2026-10-27)** → ARCHITECTURE §6. 호출부는 **백엔드 F6-3 이 끝나고 F6-5(CORS)까지 된 뒤** 만든다 — 그 전엔 브라우저에서 부를 수 없다
+  - 본문 `{ categorySlug: "football", resultSlug, answerCode }` · 응답 201 본문 없음(읽지 않음)
+  - 참여자 수 **임계값은 서버가 적용**(2026-10-27 · §4.3) → `ParticipantCount.tsx` 는 숫자가 없으면 그리지 않기만 한다. 파일 안 주석("임계값 미만이면 숨김")은 연동 때 이 방침으로 고친다
+  - ❓ S7 의 `router.replace` 는 페이지를 새로 불러오지 않는 클라이언트 이동이라 진행 중인 `fetch` 가 끊기지 않을 것으로 본다(미확인) — **연동 때 Network 탭으로 확인**. 끊기면 `fetch(…, { keepalive: true })`
 
 ---
 
@@ -200,7 +203,7 @@
 - ⚠️ **Next 16** — 코드 전 `node_modules/next/dist/docs/` 읽기 ([AGENTS.md](AGENTS.md))
 - ⚠️ **`lib/questions.ts`·`lib/scoring.ts` 는 재작성 금지.** 손댔으면 **`pnpm quiz:audit` 로 기준선 대조**
   기준선: EPL 2.38 · ETC 2.69 · ALL 4.39 · 굶는 팀 0 · 왕복 196,608건
-- **호스팅(백엔드)**: 1순위 OCI Always Free 서울. 결정 보류 — A1 확보가 복불복이라 미리 시도 권장
+- **호스팅(백엔드)**: 1순위 OCI 서울. 결정은 백엔드 첫 배포(D1) 때 — **유휴 회수가 없어야 한다**(2026-10-27 · Always Free 그대로면 PAYG 또는 Cloud Run). A1 확보가 복불복이라 미리 시도 권장
 
 ---
 *`/handoff` (또는 "핸드오프")로 이 파일을 갱신.*

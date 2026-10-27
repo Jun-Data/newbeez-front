@@ -42,9 +42,9 @@
 
 ## Git & 작업 방식
 
-- **브랜치** GitHub Flow: `main`은 항상 동작. 기능은 `feat/…` 브랜치→병합, 세팅·잡일은 `main` 직접.
+- **브랜치** GitHub Flow: `main`은 항상 동작. **`main` 에 직접 커밋·push 하지 않는다** — 기능은 `feat/…`, 문서·잡일은 `docs/…`·`chore/…` 브랜치에서 작업 → push → **PR 로만 병합** (2026-10-27 사용자 지정 · 백엔드도 같은 규칙). `main` push 는 곧 Vercel 배포다.
 - **커밋** gitmoji + Conventional: `:이모지: type: 요약` (예 `:sparkles: feat:` · `:bug: fix:` · `:wrench: chore:`). `Co-Authored-By` 안 씀.
-- **작업 루프** `/work [설명]`: 계획(explain-first·승인 대기)→브랜치·빌드→검증→커밋→`main` 병합→`/handoff`. (상세는 `.claude/commands/work.md`)
+- **작업 루프** `/work [설명]`: 계획(explain-first·승인 대기)→브랜치·빌드→검증→커밋→push→PR 병합→`/handoff`. (상세는 `.claude/commands/work.md`)
 - **역할 — 이 프로젝트는 학습이 목적이다. 앱 코드는 사용자가 직접 타이핑한다.**
 
   | | 담당 |

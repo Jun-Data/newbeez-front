@@ -1,5 +1,5 @@
 ---
-description: 로드맵 다음 슬라이스를 브랜치에서 계획→빌드→검증→커밋→병합
+description: 로드맵 다음 슬라이스를 브랜치에서 계획→빌드→검증→커밋→PR
 argument-hint: [작업 설명 (생략 시 HANDOFF의 다음 슬라이스)]
 ---
 작업 대상: $ARGUMENTS
@@ -12,7 +12,7 @@ argument-hint: [작업 설명 (생략 시 HANDOFF의 다음 슬라이스)]
    - Claude가 직접 수정해도 되는 것: `scripts/`·설정·문서뿐
 3. **검증** — 콘솔 / `pnpm build`·`pnpm lint` 후 결과 공유
 4. **커밋** — CLAUDE.md 커밋 컨벤션 (Claude가 실행, 사용자는 리뷰)
-5. **병합** — 검증 통과 시 `main` 병합 + 브랜치 삭제
+5. **PR** — 검증 통과 시 작업 브랜치를 push 하고 PR 제목·본문을 준비한다. **`main` 에 직접 병합·push 하지 않는다** — 머지는 사용자가 GitHub 에서 확인한 뒤. 머지되면 로컬 `main` 을 pull 하고 브랜치를 지운다
 6. **마무리** — `/handoff`로 HANDOFF 갱신
 
 - **브랜치명은 사용자에게 묻지 않고** 작업 내용에서 Claude가 짓는다.

@@ -28,7 +28,7 @@ pnpm dev          # http://localhost:3000
 | `pnpm dev` | 개발 서버 |
 | `pnpm build` | 프로덕션 빌드 |
 | `pnpm lint` | ESLint |
-| `pnpm quiz:audit` | **채점 엔진 전수 감사** — 65,536가지 답 조합을 모두 돌려 팀별 추천 분포를 검사 |
+| `pnpm quiz:audit` | **채점 엔진·답코드 전수 감사** — 65,536가지 답 조합을 모두 돌려 팀별 추천 분포와 답코드 왕복·계약을 검사 |
 
 ## 구조
 
@@ -42,11 +42,13 @@ lib/                      채점 코어 (백엔드 없이 동작)
   questions.ts            9문항 (Q1 리그 필터 + Q2~Q9 성향)
   scoring-config.ts       배점표 · 튜닝 상수
   scoring.ts              matchTeam — 코사인 방향 + 밴드 내 거리 타이브레이크
-scripts/audit.ts          전수 감사
+  answer-code.ts          답 ⇄ 9자리 답코드 변환·검증
+scripts/audit.ts          전수 감사 (팀 분포)
+scripts/audit-answer-code.ts  답코드 계약 감사
 docs/                     설계 문서
 ```
 
-**채점은 전부 프론트엔드에서 돕니다.** 마지막 문항을 누른 순간 네트워크 왕복 없이 결과가 나오고, 답은 URL 쿼리(`?a=...`)에 담겨 공유 링크만으로 그래프가 재현됩니다. 백엔드는 팀 표시 정보와 커뮤니티 기능을 맡습니다.
+**채점은 전부 프론트엔드에서 돕니다.** 마지막 문항을 누른 순간 네트워크 왕복 없이 결과가 나오고, 답은 URL 해시(`#a=...`)에 담겨 공유 링크만으로 그래프가 재현됩니다. 백엔드는 팀 표시 정보와 커뮤니티 기능을 맡습니다.
 
 ## 문서
 
@@ -54,6 +56,7 @@ docs/                     설계 문서
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | **시스템 설계** — 라우팅·렌더링 전략·DB 스키마·API·UI 방침 |
 | [docs/FUTURE.md](docs/FUTURE.md) | MVP 이후 — 댓글·입문 허브·UGC·인증·백엔드 호스팅 |
+| [docs/LEGAL.md](docs/LEGAL.md) | 이미지·임베드·수익화의 법적 근거와 검토 기록 |
 | [docs/club-people-2026-08.md](docs/club-people-2026-08.md) | 15팀 감독·스타·레전드 큐레이션 (검증 이력 포함) |
 | [HANDOFF.md](HANDOFF.md) | 진행 상황과 다음 할 일 |
 | [CLAUDE.md](CLAUDE.md) | 작업 규칙 |

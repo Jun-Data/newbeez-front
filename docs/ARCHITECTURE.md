@@ -6,7 +6,7 @@
 > - MVP 이후 기능(댓글·허브·UGC·인증·호스팅) → [FUTURE.md](FUTURE.md)
 > - 진행 상황·다음 할 일 → [HANDOFF.md](../HANDOFF.md)
 >
-> 최종 갱신: 2026-10-27 (§3.1 예시 · §3 감사 상태 · §8.2 축 상한 정정 · §6 `POST /participants` 계약 · §4.3 임계값은 서버 · §6 호스팅 조건) · 서비스 정식 명칭 미확정 · 배포 https://www.newbeez.kr
+> 최종 갱신: 2026-10-28 (§6 베이스 `/api/v1` → `/api` · 버전 없이 확장 후 축소) · 2026-10-27 (§3.1 예시 · §3 감사 상태 · §8.2 축 상한 정정 · §6 `POST /participants` 계약 · §4.3 임계값은 서버 · §6 호스팅 조건) · 서비스 정식 명칭 미확정 · 배포 https://www.newbeez.kr
 > 이미지·임베드·수익화의 **법적 근거와 검토 기록** → [LEGAL.md](LEGAL.md) (이 문서에는 결정과 규칙만 둔다)
 
 ---
@@ -409,7 +409,9 @@ CREATE TABLE participant_logs (
 
 ## 6. REST API 명세 (MVP)
 
-베이스 `/api/v1`. 나머지 엔드포인트는 [FUTURE.md](FUTURE.md).
+베이스 `/api`. 나머지 엔드포인트는 [FUTURE.md](FUTURE.md).
+
+**주소에 버전(`/v1`)을 넣지 않는다** (2026-10-28). API 를 쓰는 쪽이 우리 프론트 하나뿐이고 혼자 관리한다. 깨지는 변경(칸 이름·필수 여부·응답 모양 변경)은 **① 백엔드를 먼저 배포해 옛 모양과 새 모양을 둘 다 받거나 돌려주고 → ② 프론트를 배포하고 → ③ 옛 프론트가 사라진 뒤 옛 모양을 지운다**(확장 후 축소). 배포 시차와 사용자 브라우저에 남은 옛 프론트 때문에 ①을 건너뛰면 그 사이 요청이 깨진다. 정말 동시 운영이 필요해지면 그때 새 주소에만 `/v2` 를 붙인다.
 
 | 메서드 | 경로 | 용도 | 호출 주체 | CORS |
 |---|---|---|---|---|
@@ -427,7 +429,7 @@ CREATE TABLE participant_logs (
 **`POST /participants` 요청·응답** (2026-10-27 확정 · 백엔드 F6-3)
 
 ```
-POST /api/v1/participants
+POST /api/participants
 Content-Type: application/json
 
 { "categorySlug": "football", "resultSlug": "man-city", "answerCode": "032102223" }

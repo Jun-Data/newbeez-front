@@ -35,9 +35,9 @@ CREATE TABLE comments (
 
 | 메서드 | 경로 | 비고 |
 |---|---|---|
-| GET | `/api/v1/comments?resultSlug=` | 페이지네이션 |
-| POST | `/api/v1/comments` | `resultSlug` 포함 |
-| POST | `/api/v1/comments/{id}/delete` | 비밀번호를 **body**로 |
+| GET | `/api/comments?resultSlug=` | 페이지네이션 |
+| POST | `/api/comments` | `resultSlug` 포함 |
+| POST | `/api/comments/{id}/delete` | 비밀번호를 **body**로 |
 
 - **삭제가 `DELETE ...?password=xxx` 면 안 된다** — 비밀번호가 서버 접근 로그에 남는다
 - **익명 + 공개 = 스팸·욕설 무방비.** 최소한 IP 기준 rate limit(분당 3건) + 길이 제한
@@ -72,7 +72,7 @@ FROM participant_logs WHERE category_slug = 'football'
 GROUP BY result_slug ORDER BY cnt DESC;
 ```
 
-사용자별로 다르지 않은 **15행**이라 캐시가 완벽히 먹는다. → `GET /api/v1/participants/ranking` (1분 캐시)
+사용자별로 다르지 않은 **15행**이라 캐시가 완벽히 먹는다. → `GET /api/participants/ranking` (1분 캐시)
 
 **미루는 이유 — 닭과 달걀**: 순위·추천·게시판 모두 사용자가 있어야 의미가 있다. 오픈 첫날 "참여자 3명 · 게시글 0개"는 사회적 증거가 아니라 **버려진 서비스**로 읽힌다.
 

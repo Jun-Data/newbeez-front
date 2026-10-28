@@ -96,7 +96,7 @@
 - **참여자 수 표시** — `_components/ParticipantCount.tsx` 채우기 (§4.3)
 - ✅ `POST /participants` 요청·응답 형태 **확정 (2026-10-27)** → ARCHITECTURE §6. 호출부는 **백엔드 F6-3 이 끝나고 F6-5(CORS)까지 된 뒤** 만든다 — 그 전엔 브라우저에서 부를 수 없다
   - 본문 `{ categorySlug: "football", resultSlug, answerCode }` · 응답 201 본문 없음(읽지 않음)
-  - 참여자 수 **임계값은 서버가 적용**(2026-10-27 · §4.3) → `ParticipantCount.tsx` 는 숫자가 없으면 그리지 않기만 한다. 파일 안 주석("임계값 미만이면 숨김")은 연동 때 이 방침으로 고친다
+  - 참여자 수 **임계값은 서버가 적용**(2026-10-27 · §4.3) → `ParticipantCount.tsx` 는 숫자가 없으면 그리지 않기만 한다. 파일 안 주석("임계값 미만이면 숨김" · 주소 `/api/v1/participants/count`)은 연동 때 이 방침과 새 주소 `/api/participants/count`(2026-10-28 버전 제거)로 고친다
   - ❓ S7 의 `router.replace` 는 페이지를 새로 불러오지 않는 클라이언트 이동이라 진행 중인 `fetch` 가 끊기지 않을 것으로 본다(미확인) — **연동 때 Network 탭으로 확인**. 끊기면 `fetch(…, { keepalive: true })`
 
 ---

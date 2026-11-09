@@ -346,11 +346,12 @@ CREATE TABLE team_results (
   -- ── 인물 (docs/club-people-*.md 가 원천) ────────────
   manager           VARCHAR(32),
   manager_note      VARCHAR(48),
+  manager_as_of     DATE         NOT NULL,     -- 감독을 확인한 날 (§7.2)
   star_player       VARCHAR(32),               -- 현 소속 필수 · 이적시장마다 점검
   star_player_note  VARCHAR(48),
+  star_player_as_of DATE         NOT NULL,     -- 스타를 확인한 날 (§7.2)
   legend            VARCHAR(32),               -- 구단 역사 · 갱신 불필요
   legend_note       VARCHAR(64),               -- 검증 가능한 기록 근거 필수
-  curated_at        DATE         NOT NULL,     -- 감독·스타 기준일 (§7.2)
 
   -- ── 구단 공식 Instagram (§4.7) ───────────────────────
   instagram_handle  VARCHAR(30)  NOT NULL,     -- 'mancity' → 대체 링크의 원천 · 항상 있다
@@ -360,6 +361,8 @@ CREATE TABLE team_results (
   CHECK ((kit_post_url IS NULL) = (kit_season_start IS NULL))
 );
 ```
+
+**인물 기준일은 감독·스타 따로 둔다** (2026-11-09 · `curated_at` 하나를 둘로 나눔). 하나로 두면 감독만 고치고 날짜를 바꿀 때 확인하지 않은 스타까지 '새 기준'으로 보이고, 날짜를 안 바꾸면 방금 고친 감독이 낡아 보인다. 날짜는 **확인한 날**이다 — 바뀐 게 없어도 확인했으면 갱신한다(§7.1).
 
 **없앤 것** — `external_id`·`api_football_id`·`synced_at`·`badge_path`(TheSportsDB 동기화 영역 전체) · `color1~3`(→ 프론트 `lib/team-display.ts`, §7.4) · `short_code`·`stadium_capacity`·`location`·`country`·`instagram`(화면에 안 쓰거나 `instagram_handle` 로 대체). 배지가 사라지며 API 동기화의 효용이 없어졌고, 남는 사실 정보는 15행이라 손으로 넣는 게 싸다. 시즌마다 바뀌는 항목(감독·스타·유니폼 게시물)은 원래부터 수동이었다. TheSportsDB 를 쓰지 않으므로 출처 표기 의무도 없다.
 
@@ -469,7 +472,7 @@ Content-Type: application/json
 - 응답은 칸 이름이 있는 객체다 — 나중에 칸을 더해도 기존 프론트가 깨지지 않는다(위 "확장 후 축소")
 - 실패하면 프론트는 이 줄을 그리지 않는다(§4.3). 브라우저가 직접 부르므로 CORS(F6-5)가 필요하다. 사용자 정의 헤더를 붙이지 않는 단순 GET 이라 `OPTIONS` 사전 요청은 생기지 않는다
 
-**`GET /results` 응답 형태** (F7 에서 확정 · 칸 이름은 §5.1 의 camelCase): `{ slug, nameEn, nicknameKo, locationKo, foundedYear, stadium, leagueName, catchphrase, description, manager, managerNote, starPlayer, starPlayerNote, legend, legendNote, curatedAt, instagramHandle, kit: { postUrl, seasonLabel: '2026/27' } | null }` — 이름·컬러·좌표는 넣지 않는다(프론트 원본).
+**`GET /results` 응답 형태** (F7 에서 확정 · 칸 이름은 §5.1 의 camelCase): `{ slug, nameEn, nicknameKo, locationKo, foundedYear, stadium, leagueName, catchphrase, description, manager, managerNote, managerAsOf, starPlayer, starPlayerNote, starPlayerAsOf, legend, legendNote, instagramHandle, kit: { postUrl, seasonLabel: '2026/27' } | null }` — 이름·컬러·좌표는 넣지 않는다(프론트 원본).
 
 **결과 페이지가 이 호출에 실패하면 삼키지 않고 던진다** (2026-10-20 · §9 #1 해소). 빌드는 실패하고(이전 배포 유지 — Vercel 은 성공한 배포만 승격) ISR 재생성은 마지막 성공본을 유지한다. `try/catch` 로 삼켜 폴백을 렌더하면 **열화된 페이지가 '성공'으로 24시간 캐시**된다. 따라서 **백엔드가 먼저 떠 있어야 S8 을 배포할 수 있다.** `AbortSignal.timeout()` 은 둔다. 그래서 운영 백엔드는 **유휴 회수가 없는 호스팅**이어야 한다(2026-10-27 · [FUTURE §4](FUTURE.md)). 팀 콘텐츠를 프론트 정적 데이터로 옮겨 이 결합을 없애는 안도 검토했으나, 코드와 따로 바뀌는 편집 콘텐츠이고 3차·4차 데이터도 DB 에 쌓이므로 백엔드에 둔다(2026-10-27).
 
@@ -482,10 +485,12 @@ Content-Type: application/json
 | 대상 | 주기 | 방식 |
 |---|---|---|
 | **홈 유니폼 게시물** (`kit_post_url`·`kit_season_start`) | **연 1회 · 5~7월** (2026 년엔 5/4 바이에른 ~ 7/2 바르셀로나) | 아래 시즌 교체 절차 |
-| **감독** | 경질 시 수시 | 시드 수정 |
-| **스타 선수** | **이적시장 마감 후** (9월 초 · 2월 초) | 시드 수정 |
+| **감독** | 경질 시 수시 · 이적시장 점검 때 함께 확인 | 시드 수정 + `manager_as_of` |
+| **스타 선수** | **이적시장 마감 후** (9월 초 · 2월 초) | 시드 수정 + `star_player_as_of` |
 | 경기장명(스폰서)·리그명 | 바뀔 때 (몇 년에 한 번) | 시드 수정 |
 | 레전드 · 창단 · 연고지 | 없음 | — |
+
+**감독·스타의 기준일은 확인한 날로 올린다** (2026-11-09) — 바뀐 게 없어도 확인했으면 갱신한다. 6개월 넘게 확인하지 않은 줄은 화면에서 숨겨진다(§7.2). 경질이 없는 팀의 감독 줄이 숨겨지지 않도록 이적시장 점검 때 감독까지 함께 본다.
 
 **새 유니폼이 아직 안 나온 팀은 지난 시즌 게시물을 그대로 둔다.** 빈 카드보다 낡은 카드가 낫다(§4.3 과 같은 원칙).
 
@@ -512,8 +517,8 @@ DB 만 고치면 ISR 이 최대 하루 옛 카드를 내보낸다. 구단 쪽도
 
 수동 데이터의 최대 위험은 **방치**. 팬 사용자는 틀린 정보를 즉시 알아채고, **사실 오류 하나가 채점 알고리즘 신뢰까지 무너뜨린다.**
 
-1. **기준일 표기** — "감독·스타는 2026년 8월 기준". 낡아도 정직하면 신뢰가 유지된다
-2. **오래되면 숨김** — `curated_at` 이 6개월 초과 시 감독·스타 섹션 미표시. **레전드는 항상 표시**하므로 인물 영역이 비지 않는다
+1. **기준일 표기** — 감독·스타 각자의 기준일(`manager_as_of` · `star_player_as_of` · 2026-11-09 나눔). 같은 달이면 "감독·스타는 2026년 8월 기준" 한 줄, 다르면 "감독 2026년 8월 · 스타 2026년 9월 기준". 낡아도 정직하면 신뢰가 유지된다
+2. **오래되면 숨김** — 기준일이 6개월을 넘은 **줄만** 숨긴다(감독·스타 각각). **레전드는 항상 표시**하므로 인물 영역이 비지 않는다
 3. **댓글이 제보 창구** — 팬이 "감독 바뀌었어요"를 알려준다
 
 ```

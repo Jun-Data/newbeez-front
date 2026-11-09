@@ -381,9 +381,9 @@ CREATE TABLE participant_logs (
   category_slug VARCHAR(32) NOT NULL,
   result_slug   VARCHAR(32) NOT NULL,
   answer_code   VARCHAR(32),             -- 답코드 원문(§3.1) · 분석용 · NULL 허용
-  created_at    DATETIME    NOT NULL,    -- UTC
+  created_at    DATETIME    NOT NULL,    -- UTC · 초 단위(아래)
   INDEX idx_cat_slug (category_slug, result_slug),
-  INDEX idx_created (created_at)
+  INDEX idx_cat_created (category_slug, created_at)
 );
 ```
 
@@ -400,6 +400,10 @@ CREATE TABLE participant_logs (
 - 개인정보가 아니다 — 누구의 답인지 알 수 없고, 답코드는 이미 공유 URL 에 노출되는 값이다
 
 **`created_at` 은 UTC 로 저장한다** (2026-10-06). 로컬(KST)과 배포 서버의 시간대가 다르면 값이 섞이기 때문이다. DB 를 직접 보면 한국 시각보다 9시간 이르게 보인다.
+
+**초 단위로 잘라서 넣는다** (2026-11-09). Java 의 `Instant.now()` 는 소수점 아래까지 있는데 `DATETIME` 은 초까지만 담으면서 **반올림**한다(`12:00:00.7` → `12:00:01`). 자르지 않으면 저장한 객체와 DB 의 값이 1초 다를 수 있어, 백엔드가 `truncatedTo(SECONDS)` 로 잘라 둘을 같게 한다.
+
+**인덱스는 둘 다 `category_slug` 로 시작한다** (2026-11-09 · `(created_at)` 단독에서 교체). 이 테이블을 읽는 쿼리는 참여자 수(`WHERE category_slug = ?`) · 팀 순위(`… GROUP BY result_slug`) · 기간별 답코드 분석(`… AND created_at > ?`) 모두 카테고리로 시작한다. 복합 인덱스는 왼쪽 칸부터 쓰이므로 `(created_at)` 단독은 도울 쿼리가 없었다 — 카테고리를 빼고 세면 다른 퀴즈의 참여자가 섞인다(§6).
 
 이 테이블 하나가 나중에 허브의 팀 순위도 만든다 ([FUTURE §2](FUTURE.md)).
 

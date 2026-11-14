@@ -73,7 +73,7 @@ export const CLUBS: readonly Team[] = [
     name: "바이에른 뮌헨",
     league: "ETC",
     rivalSlug: "dortmund",
-    coords: { tactics: 4, resource: 2, organization: -3, goal: 5 },
+    coords: { tactics: 4, resource: 2, organization: -4, goal: 5 },
   },
   {
     slug: "dortmund",

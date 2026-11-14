@@ -203,7 +203,7 @@
 - ⚠️ **Next 16** — 코드 전 `node_modules/next/dist/docs/` 읽기 ([AGENTS.md](AGENTS.md))
 - ⚠️ **`lib/questions.ts`·`lib/scoring.ts` 는 재작성 금지.** 손댔으면 **`pnpm quiz:audit` 로 기준선 대조**
   기준선: EPL 2.38 · ETC 2.58 · ALL 3.68 · 굶는 팀 0 · 왕복 196,608건 (2026-10-26 바이에른 조직 −3→−4 반영)
-- **호스팅(백엔드)**: 1순위 OCI 서울. 결정은 백엔드 첫 배포(D1) 때 — **유휴 회수가 없어야 한다**(2026-10-27 · Always Free 그대로면 PAYG 또는 Cloud Run). A1 확보가 복불복이라 미리 시도 권장
+- **호스팅(백엔드)**: **D1 = AWS 무료 플랜**(2026-11-14 활성화 · 만료 2027-05-14 또는 크레딧 소진) → 2027-04 중순까지 유료로 계속 / 축소 / Oracle 이전 결정. 프론트에는 처음부터 `https://api.newbeez.kr` 을 넣는다(이전 = DNS 변경뿐). 상세·함정은 [FUTURE §4](docs/FUTURE.md)
 
 ---
 *`/handoff` (또는 "핸드오프")로 이 파일을 갱신.*

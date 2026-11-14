@@ -34,7 +34,7 @@ export default function QuizIntroPage() {
         <div className="flex flex-1 flex-col gap-6 px-4 pt-6 pb-10">
           <Link
             href="/football/quiz/play"
-            className="mx-auto flex h-18 w-full max-w-92 items-center justify-center rounded-full bg-[#2c2735] text-2xl font-bold text-white"
+            className="mx-auto flex h-18 w-full max-w-92 items-center justify-center rounded-full bg-[#2c2735] text-[28px] font-bold text-white"
           >
             시작하기
           </Link>

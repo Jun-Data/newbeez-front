@@ -44,7 +44,7 @@ export default function BipolarScale({
   onSelect,
 }: BipolarScaleProps) {
   return (
-    <div className="mt-3 short:mt-2 flex flex-1 flex-col gap-4">
+    <div className="mt-4 short:mt-2 flex flex-1 flex-col gap-4">
       <PoleText pole={negative} />
       <div className="relative flex max-h-100 flex-col flex-1 justify-center items-center gap-3">
         <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[#dddfdf]" />

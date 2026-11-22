@@ -21,14 +21,14 @@ export default function CardChoices({
           key={option.value}
           type="button"
           onClick={() => onSelect(option.value)}
-          className={`rounded-xl border-2 p-4 text-left ${
+          className={`rounded-xl border-2 p-4 text-center ${
             selected === option.value
               ? "border-[#fbb914] bg-[#fffcf2]"
               : "border-gray-200 bg-white"
           }`}
         >
-          <p className="font-bold">{option.headline}</p>
-          <p className="mt-1 text-xs text-gray-500">{option.detail}</p>
+          <p className="text-lg font-bold">{option.headline}</p>
+          <p className="mt-1 text-sm text-gray-800">{option.detail}</p>
         </button>
       ))}
     </div>

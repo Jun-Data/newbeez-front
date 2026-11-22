@@ -223,6 +223,8 @@ CSR 영역   참여자 수                  ← 마운트 후 fetch
 - **fire-and-forget** — 응답을 기다리지 않는다. 실패해도 결과 화면에 영향 없음
 - **답코드도 함께 보낸다** — 팀(`slug`)만이 아니라 9자리 답코드까지. 분석용이며 화면에는 쓰지 않는다(§5.2). 요청 본문 형태는 **§6**(2026-10-27 확정)
 
+**서버 쪽 남용 방어는 없다 — MVP 는 감수한다** (2026-11-09 사용자 결정). `sessionStorage` 중복 차단과 CORS(§6)는 브라우저 안에서만 동작해서, 스크립트로 직접 보내는 요청은 막지 못한다. 참여자 수가 부풀려질 수 있음을 알고 받아들인다 — 분위기용 숫자라 피해가 작다. **이 테이블로 팀 순위([FUTURE §2](FUTURE.md))를 열기 전에 다시 정한다** — 순위는 같은 요청을 반복해 보내는 것만으로 조작된다. 후보는 저장하지 않는 IP 별 속도 제한(처리방침 §7.6 영향 없음).
+
 ### 4.5 진행 화면 구현 (S5·S6에서 확정)
 
 ```
@@ -348,11 +350,12 @@ CREATE TABLE team_results (
   -- ── 인물 (docs/club-people-*.md 가 원천) ────────────
   manager           VARCHAR(32),
   manager_note      VARCHAR(48),
+  manager_as_of     DATE         NOT NULL,     -- 감독을 확인한 날 (§7.2)
   star_player       VARCHAR(32),               -- 현 소속 필수 · 이적시장마다 점검
   star_player_note  VARCHAR(48),
+  star_player_as_of DATE         NOT NULL,     -- 스타를 확인한 날 (§7.2)
   legend            VARCHAR(32),               -- 구단 역사 · 갱신 불필요
   legend_note       VARCHAR(64),               -- 검증 가능한 기록 근거 필수
-  curated_at        DATE         NOT NULL,     -- 감독·스타 기준일 (§7.2)
 
   -- ── 구단 공식 Instagram (§4.7) ───────────────────────
   instagram_handle  VARCHAR(30)  NOT NULL,     -- 'mancity' → 대체 링크의 원천 · 항상 있다
@@ -362,6 +365,8 @@ CREATE TABLE team_results (
   CHECK ((kit_post_url IS NULL) = (kit_season_start IS NULL))
 );
 ```
+
+**인물 기준일은 감독·스타 따로 둔다** (2026-11-09 · `curated_at` 하나를 둘로 나눔). 하나로 두면 감독만 고치고 날짜를 바꿀 때 확인하지 않은 스타까지 '새 기준'으로 보이고, 날짜를 안 바꾸면 방금 고친 감독이 낡아 보인다. 날짜는 **확인한 날**이다 — 바뀐 게 없어도 확인했으면 갱신한다(§7.1).
 
 **없앤 것** — `external_id`·`api_football_id`·`synced_at`·`badge_path`(TheSportsDB 동기화 영역 전체) · `color1~3`(→ 프론트 `lib/team-display.ts`, §7.4) · `short_code`·`stadium_capacity`·`location`·`country`·`instagram`(화면에 안 쓰거나 `instagram_handle` 로 대체). 배지가 사라지며 API 동기화의 효용이 없어졌고, 남는 사실 정보는 15행이라 손으로 넣는 게 싸다. 시즌마다 바뀌는 항목(감독·스타·유니폼 게시물)은 원래부터 수동이었다. TheSportsDB 를 쓰지 않으므로 출처 표기 의무도 없다.
 
@@ -383,9 +388,9 @@ CREATE TABLE participant_logs (
   category_slug VARCHAR(32) NOT NULL,
   result_slug   VARCHAR(32) NOT NULL,
   answer_code   VARCHAR(32),             -- 답코드 원문(§3.1) · 분석용 · NULL 허용
-  created_at    DATETIME    NOT NULL,    -- UTC
+  created_at    DATETIME    NOT NULL,    -- UTC · 초 단위(아래)
   INDEX idx_cat_slug (category_slug, result_slug),
-  INDEX idx_created (created_at)
+  INDEX idx_cat_created (category_slug, created_at)
 );
 ```
 
@@ -402,6 +407,10 @@ CREATE TABLE participant_logs (
 - 개인정보가 아니다 — 누구의 답인지 알 수 없고, 답코드는 이미 공유 URL 에 노출되는 값이다
 
 **`created_at` 은 UTC 로 저장한다** (2026-10-06). 로컬(KST)과 배포 서버의 시간대가 다르면 값이 섞이기 때문이다. DB 를 직접 보면 한국 시각보다 9시간 이르게 보인다.
+
+**초 단위로 잘라서 넣는다** (2026-11-09). Java 의 `Instant.now()` 는 소수점 아래까지 있는데 `DATETIME` 은 초까지만 담으면서 **반올림**한다(`12:00:00.7` → `12:00:01`). 자르지 않으면 저장한 객체와 DB 의 값이 1초 다를 수 있어, 백엔드가 `truncatedTo(SECONDS)` 로 잘라 둘을 같게 한다.
+
+**인덱스는 둘 다 `category_slug` 로 시작한다** (2026-11-09 · `(created_at)` 단독에서 교체). 이 테이블을 읽는 쿼리는 참여자 수(`WHERE category_slug = ?`) · 팀 순위(`… GROUP BY result_slug`) · 기간별 답코드 분석(`… AND created_at > ?`) 모두 카테고리로 시작한다. 복합 인덱스는 왼쪽 칸부터 쓰이므로 `(created_at)` 단독은 도울 쿼리가 없었다 — 카테고리를 빼고 세면 다른 퀴즈의 참여자가 섞인다(§6).
 
 이 테이블 하나가 나중에 허브의 팀 순위도 만든다 ([FUTURE §2](FUTURE.md)).
 
@@ -467,7 +476,7 @@ Content-Type: application/json
 - 응답은 칸 이름이 있는 객체다 — 나중에 칸을 더해도 기존 프론트가 깨지지 않는다(위 "확장 후 축소")
 - 실패하면 프론트는 이 줄을 그리지 않는다(§4.3). 브라우저가 직접 부르므로 CORS(F6-5)가 필요하다. 사용자 정의 헤더를 붙이지 않는 단순 GET 이라 `OPTIONS` 사전 요청은 생기지 않는다
 
-**`GET /results` 응답 형태** (F7 에서 확정 · 칸 이름은 §5.1 의 camelCase): `{ slug, nameEn, nicknameKo, locationKo, foundedYear, stadium, leagueName, catchphrase, description, manager, managerNote, starPlayer, starPlayerNote, legend, legendNote, curatedAt, instagramHandle, kit: { postUrl, seasonLabel: '2026/27' } | null }` — 이름·컬러·좌표는 넣지 않는다(프론트 원본).
+**`GET /results` 응답 형태** (F7 에서 확정 · 칸 이름은 §5.1 의 camelCase): `{ slug, nameEn, nicknameKo, locationKo, foundedYear, stadium, leagueName, catchphrase, description, manager, managerNote, managerAsOf, starPlayer, starPlayerNote, starPlayerAsOf, legend, legendNote, instagramHandle, kit: { postUrl, seasonLabel: '2026/27' } | null }` — 이름·컬러·좌표는 넣지 않는다(프론트 원본).
 
 **결과 페이지가 이 호출에 실패하면 삼키지 않고 던진다** (2026-10-20 · §9 #1 해소). 빌드는 실패하고(이전 배포 유지 — Vercel 은 성공한 배포만 승격) ISR 재생성은 마지막 성공본을 유지한다. `try/catch` 로 삼켜 폴백을 렌더하면 **열화된 페이지가 '성공'으로 24시간 캐시**된다. 따라서 **백엔드가 먼저 떠 있어야 S8 을 배포할 수 있다.** `AbortSignal.timeout()` 은 둔다. 그래서 운영 백엔드는 **유휴 회수가 없는 호스팅**이어야 한다(2026-10-27 · [FUTURE §4](FUTURE.md)). 팀 콘텐츠를 프론트 정적 데이터로 옮겨 이 결합을 없애는 안도 검토했으나, 코드와 따로 바뀌는 편집 콘텐츠이고 3차·4차 데이터도 DB 에 쌓이므로 백엔드에 둔다(2026-10-27).
 
@@ -480,10 +489,12 @@ Content-Type: application/json
 | 대상 | 주기 | 방식 |
 |---|---|---|
 | **홈 유니폼 게시물** (`kit_post_url`·`kit_season_start`) | **연 1회 · 5~7월** (2026 년엔 5/4 바이에른 ~ 7/2 바르셀로나) | 아래 시즌 교체 절차 |
-| **감독** | 경질 시 수시 | 시드 수정 |
-| **스타 선수** | **이적시장 마감 후** (9월 초 · 2월 초) | 시드 수정 |
+| **감독** | 경질 시 수시 · 이적시장 점검 때 함께 확인 | 시드 수정 + `manager_as_of` |
+| **스타 선수** | **이적시장 마감 후** (9월 초 · 2월 초) | 시드 수정 + `star_player_as_of` |
 | 경기장명(스폰서)·리그명 | 바뀔 때 (몇 년에 한 번) | 시드 수정 |
 | 레전드 · 창단 · 연고지 | 없음 | — |
+
+**감독·스타의 기준일은 확인한 날로 올린다** (2026-11-09) — 바뀐 게 없어도 확인했으면 갱신한다. 6개월 넘게 확인하지 않은 줄은 화면에서 숨겨진다(§7.2). 경질이 없는 팀의 감독 줄이 숨겨지지 않도록 이적시장 점검 때 감독까지 함께 본다.
 
 **새 유니폼이 아직 안 나온 팀은 지난 시즌 게시물을 그대로 둔다.** 빈 카드보다 낡은 카드가 낫다(§4.3 과 같은 원칙).
 
@@ -510,8 +521,8 @@ DB 만 고치면 ISR 이 최대 하루 옛 카드를 내보낸다. 구단 쪽도
 
 수동 데이터의 최대 위험은 **방치**. 팬 사용자는 틀린 정보를 즉시 알아채고, **사실 오류 하나가 채점 알고리즘 신뢰까지 무너뜨린다.**
 
-1. **기준일 표기** — "감독·스타는 2026년 8월 기준". 낡아도 정직하면 신뢰가 유지된다
-2. **오래되면 숨김** — `curated_at` 이 6개월 초과 시 감독·스타 섹션 미표시. **레전드는 항상 표시**하므로 인물 영역이 비지 않는다
+1. **기준일 표기** — 감독·스타 각자의 기준일(`manager_as_of` · `star_player_as_of` · 2026-11-09 나눔). 같은 달이면 "감독·스타는 2026년 8월 기준" 한 줄, 다르면 "감독 2026년 8월 · 스타 2026년 9월 기준". 낡아도 정직하면 신뢰가 유지된다
+2. **오래되면 숨김** — 기준일이 6개월을 넘은 **줄만** 숨긴다(감독·스타 각각). **레전드는 항상 표시**하므로 인물 영역이 비지 않는다
 3. **댓글이 제보 창구** — 팬이 "감독 바뀌었어요"를 알려준다
 
 ```

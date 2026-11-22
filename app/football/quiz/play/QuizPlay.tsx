@@ -86,7 +86,7 @@ export default function QuizPlay() {
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-4 short:py-2">
       <QuizProgress index={index} total={QUESTIONS.length} />
-      <h1 className="mt-2 text-xl font-bold text-balance whitespace-pre-line">
+      <h1 className="mt-2 text-center text-xl font-bold text-balance whitespace-pre-line">
         {question.prompt}
       </h1>
       {question.kind === "league" ? (

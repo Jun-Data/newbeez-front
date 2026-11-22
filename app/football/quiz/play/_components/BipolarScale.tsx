@@ -13,8 +13,8 @@ interface BipolarScaleProps {
 function PoleText({ pole }: { readonly pole: Pole }) {
   return (
     <div className="text-center">
-      <p className="text-lg font-bold">{pole.headline}</p>
-      <p className="mt-1 truncate text-xs text-gray-700">{pole.detail}</p>
+      <p className="text-xl font-bold">{pole.headline}</p>
+      <p className="mt-1 truncate text-sm text-gray-800">{pole.detail}</p>
     </div>
   );
 }

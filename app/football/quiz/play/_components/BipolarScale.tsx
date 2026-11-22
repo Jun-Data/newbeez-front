@@ -14,7 +14,7 @@ function PoleText({ pole }: { readonly pole: Pole }) {
   return (
     <div className="text-center">
       <p className="text-lg font-bold">{pole.headline}</p>
-      <p className="mt-1 truncate text-xs text-gray-500">{pole.detail}</p>
+      <p className="mt-1 truncate text-xs text-gray-700">{pole.detail}</p>
     </div>
   );
 }
@@ -44,9 +44,9 @@ export default function BipolarScale({
   onSelect,
 }: BipolarScaleProps) {
   return (
-    <div className="mt-4 short:mt-2 flex flex-1 flex-col gap-6 short:gap-4">
+    <div className="mt-3 short:mt-2 flex flex-1 flex-col gap-4">
       <PoleText pole={negative} />
-      <div className="relative flex max-h-100 flex-col flex-1 justify-center items-center gap-6">
+      <div className="relative flex max-h-100 flex-col flex-1 justify-center items-center gap-3">
         <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[#dddfdf]" />
         <ScaleDot choice={0} big selected={selected} onSelect={onSelect} />
         <ScaleDot choice={1} selected={selected} onSelect={onSelect} />
